@@ -1,0 +1,33 @@
+name: Set Anthropic API Key to Firebase Secret
+
+on:
+  workflow_dispatch:
+    inputs:
+      anthropic_key:
+        description: '輸入你的 Anthropic API Key (sk-ant-...)'
+        required: true
+        type: string
+
+jobs:
+  set-secret:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Firebase CLI
+        run: npm install -g firebase-tools
+
+      - name: Set Anthropic Key as Firebase Secret
+        run: |
+          echo "${{ github.event.inputs.anthropic_key }}" | \
+          firebase functions:secrets:set ANTHROPIC_KEY \
+          --project peini-app \
+          --non-interactive
+        env:
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}

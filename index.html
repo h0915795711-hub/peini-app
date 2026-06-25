@@ -1,0 +1,3144 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>陪你 PeiNi</title>
+<style>
+/* ══════════════════════════════
+   設計系統 Design Tokens
+══════════════════════════════ */
+:root {
+  --orange: #FF6B35;
+  --gold: #FFB830;
+  --cream: #FFF8F0;
+  --soft-pink: #FFD6C0;
+  --deep: #3D1F0A;
+  --mid: #7A4520;
+  --green: #4CAF82;
+  --blue: #4A90D9;
+  --purple: #9B6DD6;
+  --gray: #8B7355;
+  --white: #FFFFFF;
+  --shadow: 0 4px 24px rgba(61,31,10,0.10);
+  --radius: 24px;
+  --font: 'Noto Sans TC', system-ui, sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+body {
+  font-family: var(--font);
+  background: var(--cream);
+  color: var(--deep);
+  min-height: 100vh;
+  max-width: 430px;
+  margin: 0 auto;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* ══════════════════════════════
+   頁面切換系統
+══════════════════════════════ */
+.page { display:none; min-height:100vh; padding-bottom:90px; }
+.page.active { display:block; }
+
+/* ══════════════════════════════
+   底部導航
+══════════════════════════════ */
+.bottom-nav {
+  position: fixed;
+  bottom: 0; left: 50%; transform: translateX(-50%);
+  width: 100%; max-width: 430px;
+  background: white;
+  border-top: 1px solid #F0E4D8;
+  display: flex;
+  z-index: 100;
+  box-shadow: 0 -4px 20px rgba(61,31,10,0.08);
+}
+
+.nav-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 10px 0 14px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  font-family: var(--font);
+  transition: transform 0.15s;
+}
+.nav-item:active { transform: scale(0.9); }
+.nav-item .nav-icon { font-size: 26px; line-height: 1; }
+.nav-item .nav-label { font-size: 11px; font-weight: 600; color: var(--gray); margin-top: 3px; }
+.nav-item.active .nav-label { color: var(--orange); }
+.nav-item.active .nav-icon { filter: drop-shadow(0 2px 4px rgba(255,107,53,0.4)); }
+
+/* ══════════════════════════════
+   通用元件
+══════════════════════════════ */
+.page-header {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  padding: 52px 24px 28px;
+  color: white;
+}
+.page-header h1 { font-size: 28px; font-weight: 900; }
+.page-header p { font-size: 15px; opacity: 0.85; margin-top: 4px; }
+
+.card {
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.btn {
+  display: block;
+  width: 100%;
+  padding: 18px;
+  border-radius: 18px;
+  border: none;
+  font-family: var(--font);
+  font-size: 18px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.btn:active { transform: scale(0.97); }
+.btn-primary { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; box-shadow: 0 6px 20px rgba(255,107,53,0.35); }
+.btn-outline { background: transparent; border: 2px solid var(--orange); color: var(--orange); }
+.btn-green { background: linear-gradient(135deg, var(--green), #3A9D6E); color: white; }
+
+input, select {
+  width: 100%;
+  padding: 16px 18px;
+  border: 2px solid #E8D8CC;
+  border-radius: 16px;
+  font-family: var(--font);
+  font-size: 18px;
+  color: var(--deep);
+  background: white;
+  outline: none;
+  transition: border-color 0.2s;
+}
+input:focus, select:focus { border-color: var(--orange); }
+
+label { font-size: 16px; font-weight: 700; color: var(--mid); display: block; margin-bottom: 8px; }
+
+.toast {
+  position: fixed;
+  bottom: 100px;
+  left: 50%; transform: translateX(-50%);
+  background: var(--deep);
+  color: white;
+  padding: 14px 28px;
+  border-radius: 40px;
+  font-size: 15px;
+  font-weight: 600;
+  z-index: 999;
+  opacity: 0;
+  transition: opacity 0.3s;
+  white-space: nowrap;
+}
+.toast.show { opacity: 1; }
+
+/* ══════════════════════════════
+   登入 / 註冊頁
+══════════════════════════════ */
+#page-auth {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 40px 28px;
+  background: linear-gradient(160deg, var(--cream) 0%, #FFE8D0 100%);
+}
+
+.auth-logo { font-size: 72px; margin-bottom: 12px; animation: breathe 3s ease-in-out infinite; }
+@keyframes breathe { 0%,100%{transform:scale(1)} 50%{transform:scale(1.07)} }
+
+.auth-title { font-size: 40px; font-weight: 900; color: var(--orange); }
+.auth-sub { font-size: 16px; color: var(--gray); margin-bottom: 40px; }
+
+.auth-box { background: white; border-radius: var(--radius); padding: 28px 24px; width: 100%; box-shadow: var(--shadow); }
+
+.auth-tabs { display: flex; border-radius: 14px; background: var(--cream); padding: 4px; margin-bottom: 24px; }
+.auth-tab {
+  flex: 1; padding: 12px; border-radius: 12px; border: none;
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  cursor: pointer; background: none; color: var(--gray); transition: all 0.2s;
+}
+.auth-tab.active { background: white; color: var(--orange); box-shadow: var(--shadow); }
+
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+
+/* ══════════════════════════════
+   首頁 Home
+══════════════════════════════ */
+.home-greeting {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  padding: 52px 24px 32px;
+  color: white;
+}
+.greeting-time { font-size: 13px; opacity: 0.8; margin-bottom: 4px; }
+.greeting-name { font-size: 28px; font-weight: 900; }
+
+.companion-main {
+  margin: -20px 20px 0;
+  background: white;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.comp-avatar-big { font-size: 64px; animation: breathe 2.5s ease-in-out infinite; }
+.comp-info { flex: 1; }
+.comp-name-label { font-size: 13px; color: var(--gray); font-weight: 600; }
+.comp-name-big { font-size: 20px; font-weight: 900; color: var(--deep); }
+.comp-speech-bubble {
+  background: linear-gradient(135deg, #FFF0E8, #FFE4CC);
+  border-radius: 16px;
+  padding: 10px 14px;
+  font-size: 15px;
+  color: var(--mid);
+  margin-top: 8px;
+  line-height: 1.5;
+  position: relative;
+}
+.chat-btn {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 10px 16px;
+  font-size: 14px;
+  font-weight: 700;
+  font-family: var(--font);
+  cursor: pointer;
+  margin-top: 8px;
+  width: 100%;
+}
+
+.section-title-sm {
+  font-size: 18px;
+  font-weight: 900;
+  color: var(--deep);
+  padding: 20px 20px 12px;
+}
+
+/* 今日任務 */
+.task-list { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.task-item {
+  background: white;
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.task-item:active { transform: scale(0.98); }
+.task-icon { font-size: 28px; }
+.task-info { flex: 1; }
+.task-name { font-size: 17px; font-weight: 700; }
+.task-time { font-size: 13px; color: var(--gray); margin-top: 2px; }
+.task-check {
+  width: 28px; height: 28px; border-radius: 50%;
+  border: 2px solid #D0C0B0;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 14px; transition: all 0.2s;
+}
+.task-item.done .task-check { background: var(--green); border-color: var(--green); color: white; }
+.task-item.done .task-name { text-decoration: line-through; opacity: 0.5; }
+
+/* 健康快覽 */
+.health-quick { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 0 20px; }
+.hq-card {
+  background: white;
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: var(--shadow);
+  text-align: center;
+}
+.hq-icon { font-size: 28px; margin-bottom: 6px; }
+.hq-label { font-size: 12px; color: var(--gray); font-weight: 600; }
+.hq-value { font-size: 22px; font-weight: 900; color: var(--deep); margin-top: 2px; }
+.hq-unit { font-size: 12px; color: var(--gray); }
+
+/* ══════════════════════════════
+   AI 聊天頁
+══════════════════════════════ */
+.chat-header {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  padding: 52px 20px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: white;
+}
+.chat-avatar { font-size: 52px; }
+.chat-header-info h2 { font-size: 22px; font-weight: 900; }
+.chat-header-info p { font-size: 13px; opacity: 0.85; }
+
+.comp-selector {
+  display: flex;
+  gap: 10px;
+  padding: 14px 20px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  background: white;
+  border-bottom: 1px solid #F0E4D8;
+}
+.comp-selector::-webkit-scrollbar { display: none; }
+.comp-btn {
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 8px 14px;
+  border-radius: 16px;
+  border: 2px solid transparent;
+  background: var(--cream);
+  cursor: pointer;
+  font-family: var(--font);
+  transition: all 0.2s;
+}
+.comp-btn.active { border-color: var(--orange); background: #FFF0E8; }
+.comp-btn span:first-child { font-size: 28px; }
+.comp-btn span:last-child { font-size: 11px; font-weight: 700; color: var(--mid); }
+
+.chat-messages {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 300px;
+  overflow-y: auto;
+  max-height: calc(100vh - 360px);
+}
+
+.msg {
+  max-width: 82%;
+  padding: 14px 18px;
+  border-radius: 20px;
+  font-size: 17px;
+  line-height: 1.5;
+}
+.msg-ai {
+  align-self: flex-start;
+  background: white;
+  box-shadow: var(--shadow);
+  border-bottom-left-radius: 6px;
+  color: var(--deep);
+}
+.msg-user {
+  align-self: flex-end;
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  color: white;
+  border-bottom-right-radius: 6px;
+}
+.msg-time { font-size: 11px; opacity: 0.6; margin-top: 4px; }
+
+.chat-input-area {
+  position: sticky;
+  bottom: 80px;
+  background: white;
+  border-top: 1px solid #F0E4D8;
+  padding: 12px 16px;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+.chat-input {
+  flex: 1;
+  border: 2px solid #E8D8CC;
+  border-radius: 24px;
+  padding: 14px 18px;
+  font-size: 16px;
+  resize: none;
+  font-family: var(--font);
+  outline: none;
+}
+.chat-input:focus { border-color: var(--orange); }
+.send-btn {
+  width: 50px; height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.15s;
+}
+.send-btn:active { transform: scale(0.9); }
+
+.typing-indicator {
+  display: flex;
+  gap: 6px;
+  padding: 14px 18px;
+  background: white;
+  border-radius: 20px;
+  border-bottom-left-radius: 6px;
+  box-shadow: var(--shadow);
+  width: fit-content;
+}
+.typing-dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--gray);
+  animation: typingAnim 1.2s ease-in-out infinite;
+}
+.typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.typing-dot:nth-child(3) { animation-delay: 0.4s; }
+@keyframes typingAnim { 0%,60%,100%{opacity:0.3;transform:translateY(0)} 30%{opacity:1;transform:translateY(-4px)} }
+
+/* ══════════════════════════════
+   健康記錄頁
+══════════════════════════════ */
+.health-tabs {
+  display: flex;
+  border-radius: 16px;
+  background: white;
+  padding: 4px;
+  margin: 16px 20px;
+  box-shadow: var(--shadow);
+}
+.health-tab {
+  flex: 1; padding: 12px 4px;
+  border-radius: 14px; border: none;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  cursor: pointer; background: none; color: var(--gray); transition: all 0.2s;
+}
+.health-tab.active { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; box-shadow: 0 4px 12px rgba(255,107,53,0.3); }
+
+.health-panel { display: none; padding: 0 20px; }
+.health-panel.active { display: block; }
+
+.record-form { background: white; border-radius: var(--radius); padding: 24px; box-shadow: var(--shadow); margin-bottom: 16px; }
+.record-form h3 { font-size: 20px; font-weight: 900; margin-bottom: 16px; color: var(--deep); }
+.form-row { display: flex; gap: 12px; }
+.form-row > * { flex: 1; }
+
+.records-list { display: flex; flex-direction: column; gap: 10px; margin-top: 16px; }
+.record-row {
+  background: white;
+  border-radius: 16px;
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: var(--shadow);
+}
+.record-date { font-size: 13px; color: var(--gray); }
+.record-value { font-size: 20px; font-weight: 900; color: var(--deep); }
+.record-badge {
+  font-size: 11px; font-weight: 700;
+  padding: 4px 10px; border-radius: 20px;
+}
+.badge-ok { background: #D4F5E8; color: #1A6B46; }
+.badge-warn { background: #FFE8CC; color: #A05000; }
+
+/* 簡易折線圖 */
+.chart-container {
+  background: white;
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+  margin-bottom: 16px;
+}
+.chart-title { font-size: 16px; font-weight: 700; color: var(--deep); margin-bottom: 12px; }
+svg.mini-chart { width: 100%; height: 100px; overflow: visible; }
+
+/* ══════════════════════════════
+   遊戲社交頁
+══════════════════════════════ */
+.games-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 0 20px; }
+.game-card {
+  background: white;
+  border-radius: var(--radius);
+  padding: 24px 16px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+.game-card:active { transform: scale(0.96); }
+.game-icon { font-size: 48px; margin-bottom: 10px; }
+.game-title { font-size: 17px; font-weight: 900; color: var(--deep); }
+.game-desc { font-size: 12px; color: var(--gray); margin-top: 4px; }
+.game-badge {
+  display: inline-block;
+  margin-top: 10px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #FFF0E8;
+  color: var(--orange);
+}
+
+.leaderboard { padding: 0 20px; display: flex; flex-direction: column; gap: 10px; }
+.lb-row {
+  background: white;
+  border-radius: 16px;
+  padding: 14px 18px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  box-shadow: var(--shadow);
+}
+.lb-rank { font-size: 22px; font-weight: 900; width: 36px; text-align: center; }
+.lb-rank.gold-rank { color: #F0A000; }
+.lb-rank.silver-rank { color: #909090; }
+.lb-rank.bronze-rank { color: #C07040; }
+.lb-avatar { font-size: 32px; }
+.lb-name { flex: 1; font-size: 16px; font-weight: 700; }
+.lb-score { font-size: 18px; font-weight: 900; color: var(--orange); }
+
+/* 故事會 */
+.story-card {
+  background: white;
+  border-radius: var(--radius);
+  margin: 0 20px;
+  padding: 24px;
+  box-shadow: var(--shadow);
+}
+.story-category {
+  font-size: 12px; font-weight: 700; letter-spacing: 2px;
+  color: var(--orange); text-transform: uppercase; margin-bottom: 8px;
+}
+.story-title { font-size: 22px; font-weight: 900; color: var(--deep); margin-bottom: 12px; }
+.story-text { font-size: 17px; color: var(--mid); line-height: 1.8; }
+.story-controls { display: flex; gap: 12px; margin-top: 20px; }
+.story-btn {
+  flex: 1; padding: 14px;
+  border-radius: 16px; border: none;
+  font-family: var(--font); font-size: 15px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s;
+}
+.story-btn:active { transform: scale(0.97); }
+.story-play { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+.story-next { background: var(--cream); color: var(--mid); }
+
+/* ══════════════════════════════
+   個人頁
+══════════════════════════════ */
+.profile-header {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  padding: 60px 24px 40px;
+  text-align: center;
+  color: white;
+}
+.profile-avatar { font-size: 72px; margin-bottom: 12px; }
+.profile-name { font-size: 26px; font-weight: 900; }
+.profile-level { font-size: 15px; opacity: 0.85; margin-top: 4px; }
+
+.profile-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr);
+  background: white;
+  border-radius: 0 0 var(--radius) var(--radius);
+  margin: 0 20px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.ps-item { padding: 18px 12px; text-align: center; border-right: 1px solid #F0E4D8; }
+.ps-item:last-child { border-right: none; }
+.ps-value { font-size: 24px; font-weight: 900; color: var(--orange); }
+.ps-label { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+.profile-section { padding: 20px; }
+.profile-menu { background: white; border-radius: var(--radius); box-shadow: var(--shadow); overflow: hidden; }
+.profile-item {
+  display: flex; align-items: center; gap: 14px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #F8F0E8;
+  cursor: pointer;
+  font-size: 17px;
+  font-weight: 600;
+  transition: background 0.15s;
+}
+.profile-item:last-child { border-bottom: none; }
+.profile-item:active { background: #FFF8F0; }
+.profile-item-icon { font-size: 24px; }
+.profile-item-arrow { margin-left: auto; color: var(--gray); }
+
+/* 角色選擇彈窗 */
+.modal-overlay {
+  position: fixed; inset: 0;
+  background: rgba(61,31,10,0.5);
+  z-index: 200;
+  display: none;
+  align-items: flex-end;
+}
+.modal-overlay.show { display: flex; }
+.modal-sheet {
+  background: var(--cream);
+  border-radius: 32px 32px 0 0;
+  padding: 28px 24px 40px;
+  width: 100%;
+  animation: slideUp 0.3s ease;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+.modal-title { font-size: 22px; font-weight: 900; margin-bottom: 20px; text-align: center; }
+.modal-close { float: right; font-size: 22px; cursor: pointer; background: none; border: none; color: var(--gray); }
+.companions-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.comp-choice {
+  background: white;
+  border-radius: 20px;
+  padding: 16px 8px;
+  text-align: center;
+  box-shadow: var(--shadow);
+  cursor: pointer;
+  border: 3px solid transparent;
+  transition: all 0.2s;
+}
+.comp-choice.selected { border-color: var(--orange); background: #FFF0E8; }
+.comp-choice span:first-child { font-size: 36px; display: block; margin-bottom: 6px; }
+.comp-choice span:last-child { font-size: 13px; font-weight: 700; color: var(--mid); }
+
+/* ══════════════════════════════
+   社群頁面
+══════════════════════════════ */
+.social-tabs {
+  display: flex; gap: 0;
+  background: white; border-bottom: 2px solid #F0E4D8;
+  position: sticky; top: 0; z-index: 10;
+}
+.social-tab {
+  flex: 1; padding: 14px 4px; border: none; background: none;
+  font-family: var(--font); font-size: 14px; font-weight: 700;
+  color: var(--gray); cursor: pointer; border-bottom: 3px solid transparent;
+  margin-bottom: -2px; transition: all 0.2s;
+}
+.social-tab.active { color: var(--orange); border-bottom-color: var(--orange); }
+
+.social-panel { display: none; padding: 16px 20px; }
+.social-panel.active { display: block; }
+
+/* 好友列表 */
+.friend-item {
+  background: white; border-radius: 18px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--shadow); margin-bottom: 10px;
+}
+.friend-avatar { font-size: 36px; position: relative; }
+.friend-online {
+  position: absolute; bottom: 0; right: 0;
+  width: 10px; height: 10px; border-radius: 50%;
+  background: var(--green); border: 2px solid white;
+}
+.friend-info { flex: 1; }
+.friend-name { font-size: 17px; font-weight: 700; color: var(--deep); }
+.friend-status { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.friend-actions { display: flex; gap: 8px; }
+.fa-btn {
+  padding: 8px 14px; border-radius: 14px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+}
+.fa-chat { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+.fa-more { background: var(--cream); color: var(--mid); }
+
+.invite-bar {
+  background: white; border-radius: 18px; padding: 16px;
+  box-shadow: var(--shadow); margin-bottom: 16px;
+  display: flex; gap: 10px; align-items: center;
+}
+.invite-bar input { flex: 1; }
+.invite-bar button {
+  padding: 14px 18px; border-radius: 14px; border: none;
+  background: var(--orange); color: white;
+  font-family: var(--font); font-size: 15px; font-weight: 700; cursor: pointer;
+  white-space: nowrap;
+}
+
+.pending-card {
+  background: #FFF0E8; border-radius: 18px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px;
+  border: 2px dashed var(--orange); margin-bottom: 10px;
+}
+.pending-actions { display: flex; gap: 8px; margin-left: auto; }
+.pa-accept { background: var(--green); color: white; padding: 8px 14px; border-radius: 12px; border: none; font-family: var(--font); font-weight: 700; cursor: pointer; font-size: 13px; }
+.pa-decline { background: #F0E0D8; color: var(--gray); padding: 8px 14px; border-radius: 12px; border: none; font-family: var(--font); font-weight: 700; cursor: pointer; font-size: 13px; }
+
+/* 群組列表 */
+.group-card {
+  background: white; border-radius: 20px; padding: 18px;
+  box-shadow: var(--shadow); margin-bottom: 12px; cursor: pointer;
+  transition: transform 0.15s;
+}
+.group-card:active { transform: scale(0.98); }
+.group-header { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+.group-icon {
+  width: 52px; height: 52px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 28px; flex-shrink: 0;
+}
+.group-icon.family { background: linear-gradient(135deg, #FFE4EE, #FFB8D0); }
+.group-icon.friends { background: linear-gradient(135deg, #E8F4FF, #B8D8FF); }
+.group-icon.team { background: linear-gradient(135deg, #E8FFF0, #B8F0D0); }
+.group-name { font-size: 18px; font-weight: 900; color: var(--deep); }
+.group-members { font-size: 13px; color: var(--gray); margin-top: 2px; }
+.group-last-msg {
+  font-size: 14px; color: var(--gray);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  padding-top: 8px; border-top: 1px solid #F0E8E0;
+}
+.group-unread {
+  background: var(--orange); color: white;
+  border-radius: 20px; padding: 2px 10px;
+  font-size: 12px; font-weight: 700; margin-left: auto;
+}
+
+.create-group-btn {
+  display: flex; align-items: center; gap: 12px;
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  color: white; border-radius: 20px; padding: 18px;
+  margin-bottom: 16px; cursor: pointer; border: none;
+  font-family: var(--font); width: 100%; text-align: left;
+  font-size: 17px; font-weight: 700; box-shadow: 0 6px 20px rgba(255,107,53,0.3);
+}
+.create-group-btn span:first-child { font-size: 28px; }
+
+/* 群組聊天室 */
+.group-chat-page {
+  position: fixed; inset: 0; background: var(--cream);
+  z-index: 300; display: none; flex-direction: column;
+  max-width: 430px; left: 50%; transform: translateX(-50%);
+}
+.group-chat-page.open { display: flex; }
+.group-chat-header {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  padding: 52px 16px 16px;
+  display: flex; align-items: center; gap: 12px;
+  color: white; flex-shrink: 0;
+}
+.gc-back { font-size: 24px; background: none; border: none; color: white; cursor: pointer; }
+.gc-avatar { font-size: 36px; }
+.gc-info { flex: 1; }
+.gc-name { font-size: 18px; font-weight: 900; }
+.gc-members { font-size: 12px; opacity: 0.85; }
+.gc-more { font-size: 24px; background: none; border: none; color: white; cursor: pointer; }
+
+.gc-messages {
+  flex: 1; overflow-y: auto; padding: 16px;
+  display: flex; flex-direction: column; gap: 12px;
+}
+.gc-msg { display: flex; gap: 10px; align-items: flex-end; }
+.gc-msg.mine { flex-direction: row-reverse; }
+.gc-msg-avatar { font-size: 28px; flex-shrink: 0; }
+.gc-bubble {
+  max-width: 72%; padding: 12px 16px; border-radius: 20px;
+  font-size: 16px; line-height: 1.5;
+}
+.gc-msg:not(.mine) .gc-bubble { background: white; box-shadow: var(--shadow); border-bottom-left-radius: 4px; }
+.gc-msg.mine .gc-bubble { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; border-bottom-right-radius: 4px; }
+.gc-sender { font-size: 11px; color: var(--gray); margin-bottom: 4px; font-weight: 600; }
+.gc-time { font-size: 10px; color: var(--gray); margin-top: 4px; }
+
+.gc-input-area {
+  background: white; border-top: 1px solid #F0E4D8;
+  padding: 12px 16px; display: flex; gap: 10px; align-items: center;
+  flex-shrink: 0; padding-bottom: 24px;
+}
+.gc-input {
+  flex: 1; border: 2px solid #E8D8CC; border-radius: 24px;
+  padding: 12px 16px; font-size: 16px; font-family: var(--font); outline: none;
+}
+.gc-input:focus { border-color: var(--orange); }
+.gc-send {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  border: none; font-size: 20px; cursor: pointer;
+}
+
+/* 建立群組彈窗 */
+.create-modal {
+  position: fixed; inset: 0; background: rgba(61,31,10,0.5);
+  z-index: 400; display: none; align-items: flex-end;
+}
+.create-modal.show { display: flex; }
+.create-sheet {
+  background: var(--cream); border-radius: 32px 32px 0 0;
+  padding: 28px 24px 40px; width: 100%;
+  animation: slideUp 0.3s ease;
+}
+.type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 16px 0; }
+.type-card {
+  background: white; border-radius: 18px; padding: 18px 10px;
+  text-align: center; cursor: pointer; border: 3px solid transparent;
+  box-shadow: var(--shadow); transition: all 0.2s;
+}
+.type-card.selected { border-color: var(--orange); background: #FFF0E8; }
+.type-card span:first-child { font-size: 32px; display: block; margin-bottom: 6px; }
+.type-card span:last-child { font-size: 13px; font-weight: 700; color: var(--mid); }
+
+/* 戰隊積分 */
+.team-score-card {
+  background: linear-gradient(135deg, var(--deep), var(--mid));
+  border-radius: 24px; padding: 24px; color: white; margin-bottom: 16px;
+  box-shadow: 0 8px 28px rgba(61,31,10,0.25);
+}
+.ts-title { font-size: 14px; opacity: 0.7; font-weight: 600; letter-spacing: 2px; }
+.ts-score { font-size: 52px; font-weight: 900; color: var(--gold); line-height: 1; }
+.ts-rank { font-size: 14px; opacity: 0.8; margin-top: 4px; }
+.ts-members { display: flex; gap: -8px; margin-top: 16px; }
+.ts-avatar { font-size: 28px; }
+
+.team-lb { display: flex; flex-direction: column; gap: 10px; }
+.team-lb-row {
+  background: white; border-radius: 16px; padding: 14px 16px;
+  display: flex; align-items: center; gap: 12px; box-shadow: var(--shadow);
+}
+.tlb-rank { font-size: 20px; font-weight: 900; width: 32px; text-align: center; }
+.tlb-icon { font-size: 28px; }
+.tlb-info { flex: 1; }
+.tlb-name { font-size: 16px; font-weight: 700; }
+.tlb-members { font-size: 12px; color: var(--gray); }
+.tlb-score { font-size: 18px; font-weight: 900; color: var(--orange); }
+
+/* ══════════════════════════════
+   群組管理面板（全螢幕層）
+══════════════════════════════ */
+.admin-panel {
+  position: fixed; inset: 0;
+  background: var(--cream);
+  z-index: 350;
+  display: none;
+  flex-direction: column;
+  max-width: 430px;
+  left: 50%; transform: translateX(-50%);
+  overflow-y: auto;
+}
+.admin-panel.open { display: flex; }
+
+.admin-header {
+  background: linear-gradient(135deg, var(--deep), var(--mid));
+  padding: 52px 20px 20px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-shrink: 0;
+}
+.admin-back {
+  font-size: 26px; background: none; border: none;
+  color: white; cursor: pointer;
+}
+.admin-header-info { flex: 1; }
+.admin-header-info h2 { font-size: 20px; font-weight: 900; }
+.admin-header-info p { font-size: 13px; opacity: 0.75; margin-top: 2px; }
+.admin-badge {
+  background: var(--gold); color: var(--deep);
+  border-radius: 20px; padding: 4px 14px;
+  font-size: 12px; font-weight: 900;
+}
+
+.admin-body { padding: 20px; flex: 1; }
+
+.admin-section-title {
+  font-size: 16px; font-weight: 900;
+  color: var(--mid); margin: 20px 0 10px;
+  display: flex; align-items: center; gap: 8px;
+}
+.admin-section-title:first-child { margin-top: 0; }
+
+/* 群組資訊卡 */
+.group-info-card {
+  background: white; border-radius: 20px;
+  padding: 20px; box-shadow: var(--shadow);
+  margin-bottom: 4px;
+}
+.info-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 0; border-bottom: 1px solid #F0E8E0;
+}
+.info-row:last-child { border-bottom: none; }
+.info-label { font-size: 14px; color: var(--gray); font-weight: 600; }
+.info-value { font-size: 15px; font-weight: 700; color: var(--deep); }
+.info-copy-btn {
+  background: var(--orange); color: white;
+  border: none; border-radius: 10px;
+  padding: 6px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font);
+}
+.info-regen-btn {
+  background: var(--cream); color: var(--mid);
+  border: 1px solid #D0C0B0; border-radius: 10px;
+  padding: 6px 12px; font-size: 12px; font-weight: 700;
+  cursor: pointer; font-family: var(--font);
+}
+
+/* 群組設定 */
+.setting-row {
+  background: white; border-radius: 16px;
+  padding: 16px 18px; margin-bottom: 8px;
+  display: flex; align-items: center; gap: 12px;
+  box-shadow: var(--shadow); cursor: pointer;
+  transition: background 0.15s;
+}
+.setting-row:active { background: #FFF0E8; }
+.setting-icon { font-size: 24px; }
+.setting-text { flex: 1; }
+.setting-name { font-size: 16px; font-weight: 700; color: var(--deep); }
+.setting-desc { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.setting-arrow { color: var(--gray); font-size: 18px; }
+
+/* 成員管理列表 */
+.member-manage-item {
+  background: white; border-radius: 18px;
+  padding: 14px 16px; margin-bottom: 10px;
+  box-shadow: var(--shadow);
+}
+.member-main-row {
+  display: flex; align-items: center; gap: 12px;
+}
+.mm-avatar { font-size: 36px; }
+.mm-info { flex: 1; }
+.mm-name { font-size: 17px; font-weight: 700; color: var(--deep); }
+.mm-meta { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.mm-role-badge {
+  padding: 4px 12px; border-radius: 20px;
+  font-size: 12px; font-weight: 700;
+}
+.role-admin { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+.role-mod { background: #E8F4FF; color: #2060A0; }
+.role-member { background: var(--cream); color: var(--gray); }
+
+.member-actions {
+  display: flex; gap: 8px; margin-top: 12px;
+  padding-top: 10px; border-top: 1px solid #F0E8E0;
+  flex-wrap: wrap;
+}
+.ma-btn {
+  padding: 8px 14px; border-radius: 12px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; transition: transform 0.15s;
+}
+.ma-btn:active { transform: scale(0.96); }
+.ma-promote { background: #E8F4FF; color: #2060A0; }
+.ma-demote  { background: #FFF0CC; color: #806000; }
+.ma-kick    { background: #FFE8E8; color: #C03030; }
+.ma-ban     { background: #3D1F0A; color: white; }
+.ma-transfer { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+
+/* 危險區域 */
+.danger-zone {
+  background: #FFF0F0; border-radius: 20px;
+  border: 2px solid #FFD0D0; padding: 20px;
+  margin-top: 8px;
+}
+.danger-zone-title {
+  font-size: 15px; font-weight: 900; color: #C03030;
+  margin-bottom: 12px; display: flex; align-items: center; gap: 8px;
+}
+.danger-btn {
+  display: block; width: 100%;
+  padding: 14px; border-radius: 14px; border: none;
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  cursor: pointer; margin-bottom: 10px; transition: transform 0.15s;
+}
+.danger-btn:active { transform: scale(0.98); }
+.danger-btn:last-child { margin-bottom: 0; }
+.danger-dissolve { background: #C03030; color: white; }
+.danger-leave    { background: #F0E0D8; color: var(--mid); }
+
+/* 確認對話框 */
+.confirm-overlay {
+  position: fixed; inset: 0;
+  background: rgba(61,31,10,0.6);
+  z-index: 500; display: none;
+  align-items: center; justify-content: center;
+  padding: 24px;
+}
+.confirm-overlay.show { display: flex; }
+.confirm-box {
+  background: white; border-radius: 24px;
+  padding: 28px 24px; width: 100%; max-width: 340px;
+  text-align: center; box-shadow: 0 20px 60px rgba(61,31,10,0.3);
+  animation: scaleIn 0.2s ease;
+}
+@keyframes scaleIn { from{transform:scale(0.9);opacity:0} to{transform:scale(1);opacity:1} }
+.confirm-icon { font-size: 52px; margin-bottom: 12px; }
+.confirm-title { font-size: 20px; font-weight: 900; color: var(--deep); margin-bottom: 8px; }
+.confirm-desc { font-size: 15px; color: var(--gray); line-height: 1.6; margin-bottom: 24px; }
+.confirm-btns { display: flex; gap: 12px; }
+.confirm-cancel {
+  flex: 1; padding: 14px; border-radius: 14px;
+  border: 2px solid #E0D0C0; background: white;
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  color: var(--gray); cursor: pointer;
+}
+.confirm-ok {
+  flex: 1; padding: 14px; border-radius: 14px; border: none;
+  font-family: var(--font); font-size: 16px; font-weight: 700;
+  color: white; cursor: pointer;
+}
+.confirm-ok.danger { background: #C03030; }
+.confirm-ok.warn   { background: var(--orange); }
+
+/* 改名輸入彈窗 */
+.rename-overlay {
+  position: fixed; inset: 0;
+  background: rgba(61,31,10,0.5);
+  z-index: 500; display: none;
+  align-items: flex-end;
+}
+.rename-overlay.show { display: flex; }
+.rename-sheet {
+  background: var(--cream); border-radius: 32px 32px 0 0;
+  padding: 28px 24px 40px; width: 100%;
+  animation: slideUp 0.3s ease;
+}
+.rename-title { font-size: 20px; font-weight: 900; margin-bottom: 16px; }
+</style>
+</head>
+<body>
+
+<!-- ══════════════ 登入頁 ══════════════ -->
+<div id="page-auth" class="page active">
+  <div class="auth-logo">🌟</div>
+  <div class="auth-title">陪你</div>
+  <div class="auth-sub">PeiNi · 你的每日暖心夥伴</div>
+
+  <div class="auth-box">
+    <div class="auth-tabs">
+      <button class="auth-tab active" onclick="switchAuthTab('login')">登入</button>
+      <button class="auth-tab" onclick="switchAuthTab('register')">註冊</button>
+    </div>
+
+    <!-- 登入表單 -->
+    <div id="login-form" class="auth-form">
+      <div>
+        <label>電子信箱</label>
+        <input type="email" id="login-email" placeholder="請輸入信箱">
+      </div>
+      <div>
+        <label>密碼</label>
+        <input type="password" id="login-pwd" placeholder="請輸入密碼">
+      </div>
+      <button class="btn btn-primary" onclick="doLogin()">登入</button>
+      <button class="btn btn-outline" onclick="doGoogleLogin()">🔵 Google 登入</button>
+    </div>
+
+    <!-- 註冊表單 -->
+    <div id="register-form" class="auth-form" style="display:none">
+      <div>
+        <label>您的稱呼</label>
+        <input type="text" id="reg-name" placeholder="例如：王阿嬤">
+      </div>
+      <div>
+        <label>電子信箱</label>
+        <input type="email" id="reg-email" placeholder="請輸入信箱">
+      </div>
+      <div>
+        <label>密碼（至少 6 位）</label>
+        <input type="password" id="reg-pwd" placeholder="請輸入密碼">
+      </div>
+      <button class="btn btn-primary" onclick="doRegister()">建立帳號</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 首頁 ══════════════ -->
+<div id="page-home" class="page">
+  <div class="home-greeting">
+    <div class="greeting-time" id="greeting-time">早安 ☀️</div>
+    <div class="greeting-name" id="greeting-name">歡迎回來！</div>
+  </div>
+
+  <!-- 主要陪伴者 -->
+  <div class="companion-main">
+    <div class="comp-avatar-big" id="home-comp-avatar">👩‍⚕️</div>
+    <div class="comp-info">
+      <div class="comp-name-label">今日陪伴者</div>
+      <div class="comp-name-big" id="home-comp-name">曉雯看護</div>
+      <div class="comp-speech-bubble" id="home-comp-speech">今天吃藥了嗎？要記得多喝水喔！💕</div>
+      <button class="chat-btn" onclick="goToChat()">💬 和我說說話</button>
+    </div>
+  </div>
+
+  <!-- 今日任務 -->
+  <div class="section-title-sm">📋 今日任務</div>
+  <div class="task-list" id="task-list">
+    <div class="task-item" id="task-medicine" onclick="toggleTask('medicine')">
+      <div class="task-icon">💊</div>
+      <div class="task-info">
+        <div class="task-name">吃早上的藥</div>
+        <div class="task-time">每天 08:00</div>
+      </div>
+      <div class="task-check" id="check-medicine"></div>
+    </div>
+    <div class="task-item" id="task-water" onclick="toggleTask('water')">
+      <div class="task-icon">💧</div>
+      <div class="task-info">
+        <div class="task-name">喝 8 杯水</div>
+        <div class="task-time">全天候提醒</div>
+      </div>
+      <div class="task-check" id="check-water"></div>
+    </div>
+    <div class="task-item" id="task-walk" onclick="toggleTask('walk')">
+      <div class="task-icon">🚶</div>
+      <div class="task-info">
+        <div class="task-name">出門散步 30 分鐘</div>
+        <div class="task-time">建議下午 4:00</div>
+      </div>
+      <div class="task-check" id="check-walk"></div>
+    </div>
+    <div class="task-item" id="task-bp" onclick="toggleTask('bp')">
+      <div class="task-icon">❤️</div>
+      <div class="task-info">
+        <div class="task-name">量血壓並記錄</div>
+        <div class="task-time">早晚各一次</div>
+      </div>
+      <div class="task-check" id="check-bp"></div>
+    </div>
+  </div>
+
+  <!-- 健康快覽 -->
+  <div class="section-title-sm">📊 健康概況</div>
+  <div class="health-quick">
+    <div class="hq-card">
+      <div class="hq-icon">❤️</div>
+      <div class="hq-label">最新血壓</div>
+      <div class="hq-value" id="hq-bp">—</div>
+      <div class="hq-unit">mmHg</div>
+    </div>
+    <div class="hq-card">
+      <div class="hq-icon">🩸</div>
+      <div class="hq-label">最新血糖</div>
+      <div class="hq-value" id="hq-bs">—</div>
+      <div class="hq-unit">mg/dL</div>
+    </div>
+    <div class="hq-card">
+      <div class="hq-icon">🏆</div>
+      <div class="hq-label">今日積分</div>
+      <div class="hq-value" id="hq-score" style="color:var(--orange)">0</div>
+      <div class="hq-unit">points</div>
+    </div>
+    <div class="hq-card">
+      <div class="hq-icon">🔥</div>
+      <div class="hq-label">連續天數</div>
+      <div class="hq-value" id="hq-streak" style="color:var(--orange)">0</div>
+      <div class="hq-unit">天</div>
+    </div>
+  </div>
+  <div style="height: 16px;"></div>
+</div>
+
+<!-- ══════════════ AI 聊天頁 ══════════════ -->
+<div id="page-chat" class="page">
+  <div class="chat-header">
+    <div class="chat-avatar" id="chat-avatar">👩‍⚕️</div>
+    <div class="chat-header-info">
+      <h2 id="chat-name">曉雯看護</h2>
+      <p id="chat-desc">親切貼心，專業健康守護</p>
+    </div>
+  </div>
+
+  <!-- 切換角色 -->
+  <div class="comp-selector">
+    <button class="comp-btn active" onclick="selectComp(0, this)">
+      <span>👩‍⚕️</span><span>曉雯</span>
+    </button>
+    <button class="comp-btn" onclick="selectComp(1, this)">
+      <span>💑</span><span>小情人</span>
+    </button>
+    <button class="comp-btn" onclick="selectComp(2, this)">
+      <span>👴</span><span>老伴</span>
+    </button>
+    <button class="comp-btn" onclick="selectComp(3, this)">
+      <span>🧑‍💼</span><span>管家</span>
+    </button>
+    <button class="comp-btn" onclick="selectComp(4, this)">
+      <span>🐱</span><span>小咪</span>
+    </button>
+  </div>
+
+  <!-- 訊息區 -->
+  <div class="chat-messages" id="chat-messages"></div>
+
+  <!-- 輸入區 -->
+  <div class="chat-input-area">
+    <textarea class="chat-input" id="chat-input" rows="1" placeholder="說說你的想法…"
+      onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"
+      oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'"></textarea>
+    <button class="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<!-- ══════════════ 健康記錄頁 ══════════════ -->
+<div id="page-health" class="page">
+  <div class="page-header">
+    <h1>📊 健康記錄</h1>
+    <p>每天記錄，守護您的健康</p>
+  </div>
+
+  <div class="health-tabs">
+    <button class="health-tab active" onclick="switchHealthTab('bp', this)">血壓</button>
+    <button class="health-tab" onclick="switchHealthTab('bs', this)">血糖</button>
+    <button class="health-tab" onclick="switchHealthTab('medicine', this)">用藥</button>
+  </div>
+
+  <!-- 血壓面板 -->
+  <div id="panel-bp" class="health-panel active">
+    <div class="record-form">
+      <h3>記錄今日血壓</h3>
+      <div class="form-row">
+        <div>
+          <label>收縮壓（高）</label>
+          <input type="number" id="bp-sys" placeholder="120" min="60" max="250">
+        </div>
+        <div>
+          <label>舒張壓（低）</label>
+          <input type="number" id="bp-dia" placeholder="80" min="40" max="150">
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <label>量測時間</label>
+        <select id="bp-time">
+          <option value="morning">早上</option>
+          <option value="evening">晚上</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="saveBP()">儲存記錄 ✓</button>
+    </div>
+
+    <div class="chart-container">
+      <div class="chart-title">近期血壓趨勢</div>
+      <svg class="mini-chart" id="bp-chart" viewBox="0 0 320 100"></svg>
+    </div>
+
+    <div class="records-list" id="bp-records"></div>
+  </div>
+
+  <!-- 血糖面板 -->
+  <div id="panel-bs" class="health-panel">
+    <div class="record-form">
+      <h3>記錄今日血糖</h3>
+      <div>
+        <label>血糖值（mg/dL）</label>
+        <input type="number" id="bs-val" placeholder="100" min="40" max="500">
+      </div>
+      <div style="margin-top:12px">
+        <label>量測時機</label>
+        <select id="bs-timing">
+          <option value="fasting">空腹</option>
+          <option value="after-meal">飯後 2 小時</option>
+          <option value="before-sleep">睡前</option>
+        </select>
+      </div>
+      <button class="btn btn-primary" style="margin-top:16px" onclick="saveBS()">儲存記錄 ✓</button>
+    </div>
+    <div class="records-list" id="bs-records"></div>
+  </div>
+
+  <!-- 用藥面板 -->
+  <div id="panel-medicine" class="health-panel">
+    <div class="record-form">
+      <h3>今日用藥打卡</h3>
+      <div id="medicine-checklist" style="display:flex;flex-direction:column;gap:10px;margin-bottom:16px"></div>
+      <button class="btn btn-green" onclick="addMedicine()">＋ 新增藥物</button>
+    </div>
+    <div id="medicine-log" class="records-list"></div>
+  </div>
+</div>
+
+<!-- ══════════════ 遊戲頁（保留） ══════════════ -->
+<div id="page-game" class="page">
+  <div class="page-header">
+    <h1>🎮 遊戲 ＆ 故事</h1>
+    <p>玩樂、學習，每天都開心</p>
+  </div>
+
+  <div class="section-title-sm">🎙️ 今日故事會</div>
+  <div class="story-card">
+    <div class="story-category" id="story-cat">台灣民間故事</div>
+    <div class="story-title" id="story-title">正在載入故事…</div>
+    <div class="story-text" id="story-text">請稍候</div>
+    <div class="story-controls">
+      <button class="story-btn story-play" id="play-btn" onclick="toggleStory()">▶ 播放語音</button>
+      <button class="story-btn story-next" onclick="loadStory()">下一則 ›</button>
+    </div>
+  </div>
+
+  <div class="section-title-sm">🎮 休閒遊戲</div>
+  <div class="games-grid">
+    <div class="game-card" onclick="openGame('mahjong')">
+      <div class="game-icon">🀄</div>
+      <div class="game-title">麻將</div>
+      <div class="game-desc">線上對戰</div>
+      <div class="game-badge">3 人等待中</div>
+    </div>
+    <div class="game-card" onclick="openGame('chess')">
+      <div class="game-icon">♟️</div>
+      <div class="game-title">象棋</div>
+      <div class="game-desc">益智對弈</div>
+      <div class="game-badge">立即開始</div>
+    </div>
+    <div class="game-card" onclick="openGame('quiz')">
+      <div class="game-icon">🧠</div>
+      <div class="game-title">腦力測驗</div>
+      <div class="game-desc">每日 5 題</div>
+      <div class="game-badge">今日未完成</div>
+    </div>
+    <div class="game-card" onclick="openGame('photo')">
+      <div class="game-icon">📸</div>
+      <div class="game-title">拍照打卡</div>
+      <div class="game-desc">記錄美好時刻</div>
+      <div class="game-badge">+20 積分</div>
+    </div>
+  </div>
+  <div style="height:16px"></div>
+</div>
+
+<!-- ══════════════ 社群頁 ══════════════ -->
+<div id="page-social" class="page">
+  <div class="page-header">
+    <h1>👥 我的社群</h1>
+    <p>好友、家人、遊戲戰隊</p>
+  </div>
+
+  <!-- 分頁標籤 -->
+  <div class="social-tabs">
+    <button class="social-tab active" onclick="switchSocialTab('friends', this)">好友</button>
+    <button class="social-tab" onclick="switchSocialTab('groups', this)">群組</button>
+    <button class="social-tab" onclick="switchSocialTab('teams', this)">戰隊</button>
+  </div>
+
+  <!-- ── 好友面板 ── -->
+  <div id="panel-friends" class="social-panel active">
+    <!-- 搜尋邀請 -->
+    <div style="margin-bottom:8px">
+      <label style="font-size:14px;color:var(--gray);margin-bottom:6px;display:block">輸入對方的用戶代號來加好友</label>
+      <div class="invite-bar">
+        <input type="text" id="friend-code-input" placeholder="例如：user_abc123">
+        <button onclick="sendFriendRequest()">發送邀請</button>
+      </div>
+    </div>
+
+    <!-- 我的代號 -->
+    <div style="background:linear-gradient(135deg,#FFF0E8,#FFE4CC);border-radius:16px;padding:14px 16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+      <span style="font-size:22px">🪪</span>
+      <div style="flex:1">
+        <div style="font-size:12px;color:var(--gray);font-weight:600">我的代號（分享給朋友）</div>
+        <div style="font-size:16px;font-weight:900;color:var(--orange)" id="my-uid-display">載入中…</div>
+      </div>
+      <button onclick="copyMyCode()" style="background:var(--orange);color:white;border:none;border-radius:12px;padding:8px 14px;font-family:var(--font);font-weight:700;cursor:pointer;font-size:13px">複製</button>
+    </div>
+
+    <!-- 待處理邀請 -->
+    <div id="pending-requests"></div>
+
+    <!-- 好友列表 -->
+    <div style="font-size:15px;font-weight:700;color:var(--mid);margin-bottom:10px" id="friends-count">我的好友（0）</div>
+    <div id="friends-list">
+      <div style="text-align:center;padding:30px;color:var(--gray)">
+        <div style="font-size:40px;margin-bottom:8px">👋</div>
+        還沒有好友，快分享代號邀請朋友吧！
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 群組面板 ── -->
+  <div id="panel-groups" class="social-panel">
+    <button class="create-group-btn" onclick="openCreateGroup()">
+      <span>➕</span>
+      <span>建立新群組（家人群 / 好友群）</span>
+    </button>
+
+    <!-- 加入群組 -->
+    <div style="margin-bottom:16px">
+      <div class="invite-bar">
+        <input type="text" id="group-code-input" placeholder="輸入邀請碼加入群組">
+        <button onclick="joinGroupByCode()">加入</button>
+      </div>
+    </div>
+
+    <div style="font-size:15px;font-weight:700;color:var(--mid);margin-bottom:10px">我的群組</div>
+    <div id="groups-list">
+      <div style="text-align:center;padding:30px;color:var(--gray)">
+        <div style="font-size:40px;margin-bottom:8px">🏠</div>
+        還沒有群組，建立一個家人群吧！
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 戰隊面板 ── -->
+  <div id="panel-teams" class="social-panel">
+    <button class="create-group-btn" onclick="openCreateTeam()" style="background:linear-gradient(135deg,#4CAF82,#3A9D6E)">
+      <span>⚔️</span>
+      <span>建立遊戲戰隊</span>
+    </button>
+
+    <div class="invite-bar" style="margin-bottom:16px">
+      <input type="text" id="team-code-input" placeholder="輸入戰隊邀請碼">
+      <button onclick="joinTeamByCode()" style="background:var(--green)">加入</button>
+    </div>
+
+    <!-- 我的戰隊積分 -->
+    <div id="my-team-score"></div>
+
+    <!-- 戰隊排行榜 -->
+    <div style="font-size:15px;font-weight:700;color:var(--mid);margin:16px 0 10px">全服戰隊排行</div>
+    <div class="team-lb" id="team-leaderboard"></div>
+    <div style="height:16px"></div>
+  </div>
+</div>
+
+<!-- ══════════════ 群組聊天室（全螢幕層） ══════════════ -->
+<div class="group-chat-page" id="group-chat-page">
+  <div class="group-chat-header">
+    <button class="gc-back" onclick="closeGroupChat()">‹</button>
+    <div class="gc-avatar" id="gc-avatar">🏠</div>
+    <div class="gc-info">
+      <div class="gc-name" id="gc-name">群組名稱</div>
+      <div class="gc-members" id="gc-members">成員載入中…</div>
+    </div>
+    <button class="gc-more" onclick="showGroupInfo()">⋯</button>
+  </div>
+  <div class="gc-messages" id="gc-messages"></div>
+  <div class="gc-input-area">
+    <input class="gc-input" id="gc-input" placeholder="輸入訊息…"
+      onkeydown="if(event.key==='Enter')sendGroupMsg()">
+    <button class="gc-send" onclick="sendGroupMsg()">➤</button>
+  </div>
+</div>
+
+<!-- ══════════════ 建立群組彈窗 ══════════════ -->
+<div class="create-modal" id="create-modal" onclick="closeCreateModal(event)">
+  <div class="create-sheet">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px">
+      <div style="font-size:20px;font-weight:900" id="create-modal-title">建立新群組</div>
+      <button onclick="closeCreateModal()" style="background:none;border:none;font-size:22px;color:var(--gray);cursor:pointer">✕</button>
+    </div>
+
+    <label>群組名稱</label>
+    <input type="text" id="new-group-name" placeholder="例如：王家人聊天室" style="margin-bottom:16px">
+
+    <label>群組類型</label>
+    <div class="type-grid" id="group-type-grid">
+      <div class="type-card selected" onclick="selectGroupType(this,'family')">
+        <span>🏠</span><span>家人群</span>
+      </div>
+      <div class="type-card" onclick="selectGroupType(this,'friends')">
+        <span>👥</span><span>好友群</span>
+      </div>
+      <div class="type-card" onclick="selectGroupType(this,'team')">
+        <span>⚔️</span><span>遊戲戰隊</span>
+      </div>
+    </div>
+
+    <button class="btn btn-primary" onclick="createGroup()">建立群組 ✓</button>
+  </div>
+</div>
+
+<!-- ══════════════ 群組管理面板 ══════════════ -->
+<div class="admin-panel" id="admin-panel">
+  <div class="admin-header">
+    <button class="admin-back" onclick="closeAdminPanel()">‹</button>
+    <div class="admin-header-info">
+      <h2 id="admin-group-name">群組管理</h2>
+      <p id="admin-group-meta">載入中…</p>
+    </div>
+    <div class="admin-badge">⚙️ 管理員</div>
+  </div>
+
+  <div class="admin-body">
+
+    <!-- 群組資訊 -->
+    <div class="admin-section-title">📋 群組資訊</div>
+    <div class="group-info-card">
+      <div class="info-row">
+        <span class="info-label">群組名稱</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="info-value" id="admin-info-name">—</span>
+          <button class="info-copy-btn" onclick="openRenameModal()">改名</button>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">群組類型</span>
+        <span class="info-value" id="admin-info-type">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">成員人數</span>
+        <span class="info-value" id="admin-info-count">—</span>
+      </div>
+      <div class="info-row">
+        <span class="info-label">邀請碼</span>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span class="info-value" id="admin-invite-code" style="font-family:monospace;color:var(--orange)">—</span>
+          <button class="info-copy-btn" onclick="copyInviteCode()">複製</button>
+          <button class="info-regen-btn" onclick="regenInviteCode()">重產</button>
+        </div>
+      </div>
+      <div class="info-row">
+        <span class="info-label">建立時間</span>
+        <span class="info-value" id="admin-created-at">—</span>
+      </div>
+    </div>
+
+    <!-- 設定功能 -->
+    <div class="admin-section-title">⚙️ 管理設定</div>
+    <div class="setting-row" onclick="toggleJoinApproval()">
+      <div class="setting-icon">🔒</div>
+      <div class="setting-text">
+        <div class="setting-name">加入需要審核</div>
+        <div class="setting-desc" id="approval-desc">目前：任何人可直接加入</div>
+      </div>
+      <div class="setting-arrow" id="approval-icon">🔓</div>
+    </div>
+    <div class="setting-row" onclick="toggleMuteAll()">
+      <div class="setting-icon">🔕</div>
+      <div class="setting-text">
+        <div class="setting-name">全員禁言</div>
+        <div class="setting-desc" id="mute-desc">目前：成員可自由發言</div>
+      </div>
+      <div class="setting-arrow" id="mute-icon">💬</div>
+    </div>
+    <div class="setting-row" onclick="openAnnouncement()">
+      <div class="setting-icon">📢</div>
+      <div class="setting-text">
+        <div class="setting-name">發布公告</div>
+        <div class="setting-desc">傳送系統訊息給所有成員</div>
+      </div>
+      <div class="setting-arrow">›</div>
+    </div>
+
+    <!-- 成員管理 -->
+    <div class="admin-section-title">👥 成員管理</div>
+    <div id="admin-members-list">
+      <div style="text-align:center;padding:20px;color:var(--gray)">載入成員中…</div>
+    </div>
+
+    <!-- 危險區域 -->
+    <div class="admin-section-title">⚠️ 危險操作</div>
+    <div class="danger-zone">
+      <div class="danger-zone-title">⚠️ 以下操作不可逆，請謹慎</div>
+      <button class="danger-btn danger-dissolve" onclick="confirmDissolveGroup()">🗑️ 解散群組</button>
+      <button class="danger-btn danger-leave" onclick="confirmLeaveGroup()">🚪 離開群組</button>
+    </div>
+
+    <div style="height:32px"></div>
+  </div>
+</div>
+
+<!-- 確認對話框 -->
+<div class="confirm-overlay" id="confirm-overlay">
+  <div class="confirm-box">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title">確認操作</div>
+    <div class="confirm-desc" id="confirm-desc">確定要執行此操作嗎？</div>
+    <div class="confirm-btns">
+      <button class="confirm-cancel" onclick="closeConfirm()">取消</button>
+      <button class="confirm-ok" id="confirm-ok-btn" onclick="executeConfirm()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- 改名彈窗 -->
+<div class="rename-overlay" id="rename-overlay" onclick="closeRenameModal(event)">
+  <div class="rename-sheet">
+    <div class="rename-title" id="rename-title">✏️ 修改群組名稱</div>
+    <input type="text" id="rename-input" placeholder="輸入新名稱" style="margin-bottom:16px">
+    <button class="btn btn-primary" onclick="executeRename()">確認修改</button>
+  </div>
+</div>
+<div id="page-profile" class="page">
+  <div class="profile-header">
+    <div class="profile-avatar" id="profile-avatar">👵</div>
+    <div class="profile-name" id="profile-name">我的名字</div>
+    <div class="profile-level" id="profile-level">⭐ 初階健康達人</div>
+  </div>
+
+  <div class="profile-stats">
+    <div class="ps-item">
+      <div class="ps-value" id="ps-days">0</div>
+      <div class="ps-label">使用天數</div>
+    </div>
+    <div class="ps-item">
+      <div class="ps-value" id="ps-score">0</div>
+      <div class="ps-label">累積積分</div>
+    </div>
+    <div class="ps-item">
+      <div class="ps-value" id="ps-tasks">0</div>
+      <div class="ps-label">完成任務</div>
+    </div>
+  </div>
+
+  <div class="profile-section">
+    <div class="profile-menu">
+      <div class="profile-item" onclick="openCompModal()">
+        <div class="profile-item-icon">🤝</div>
+        <div>更換陪伴角色</div>
+        <div class="profile-item-arrow">›</div>
+      </div>
+      <div class="profile-item" onclick="showToast('提醒設定功能開發中…')">
+        <div class="profile-item-icon">🔔</div>
+        <div>提醒設定</div>
+        <div class="profile-item-arrow">›</div>
+      </div>
+      <div class="profile-item" onclick="showToast('訂閱方案功能開發中…')">
+        <div class="profile-item-icon">💛</div>
+        <div>升級陪伴版 $299/月</div>
+        <div class="profile-item-arrow">›</div>
+      </div>
+      <div class="profile-item" onclick="showToast('字體大小設定開發中…')">
+        <div class="profile-item-icon">🔤</div>
+        <div>字體大小設定</div>
+        <div class="profile-item-arrow">›</div>
+      </div>
+      <div class="profile-item" onclick="doLogout()">
+        <div class="profile-item-icon">🚪</div>
+        <div style="color:#C04030">登出</div>
+        <div class="profile-item-arrow">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════ 底部導航 ══════════════ -->
+<nav class="bottom-nav" id="bottom-nav" style="display:none">
+  <button class="nav-item active" onclick="goPage('home', this)">
+    <span class="nav-icon">🏠</span>
+    <span class="nav-label">首頁</span>
+  </button>
+  <button class="nav-item" onclick="goPage('chat', this)">
+    <span class="nav-icon">💬</span>
+    <span class="nav-label">聊天</span>
+  </button>
+  <button class="nav-item" onclick="goPage('health', this)">
+    <span class="nav-icon">❤️</span>
+    <span class="nav-label">健康</span>
+  </button>
+  <button class="nav-item" onclick="goPage('social', this)">
+    <span class="nav-icon">👥</span>
+    <span class="nav-label">社群</span>
+  </button>
+  <button class="nav-item" onclick="goPage('game', this)">
+    <span class="nav-icon">🎮</span>
+    <span class="nav-label">遊戲</span>
+  </button>
+</nav>
+
+<!-- 角色選擇彈窗 -->
+<div class="modal-overlay" id="comp-modal" onclick="closeCompModal(event)">
+  <div class="modal-sheet">
+    <button class="modal-close" onclick="closeCompModal()">✕</button>
+    <div class="modal-title">選擇你的陪伴夥伴</div>
+    <div class="companions-grid" id="comp-grid"></div>
+    <button class="btn btn-primary" style="margin-top:20px" onclick="saveCompanion()">確定選擇</button>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- ══════════════════════════════════════
+     Firebase SDK + App Logic
+══════════════════════════════════════ -->
+<script type="module">
+// ─────────────────────────────────────
+// ★ 在這裡填入你的 Firebase 設定 ★
+// ─────────────────────────────────────
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+         GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged
+       } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, set, get, push, onValue, update
+       } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const googleProvider = new GoogleAuthProvider();
+
+// ─── 陪伴角色資料 ───
+const COMPANIONS = [
+  { id:'nurse',   emoji:'👩‍⚕️', name:'曉雯看護',  desc:'親切貼心，專業健康守護',    persona:'你是曉雯，一位親切溫柔的看護。用關愛的語氣與長輩說話，常常叮嚀吃藥、喝水、量血壓。偶爾說說健康小知識。用繁體中文，語氣溫柔，句子簡短易懂。' },
+  { id:'lover',   emoji:'💑',   name:'小情人甜甜', desc:'甜蜜撒嬌，天天說愛你',      persona:'你是甜甜，一位甜蜜溫柔的小情人。用撒嬌可愛的語氣和長輩說話，常說「我愛你」「想你了」「你是最棒的」。偶爾問長輩今天開心嗎。用繁體中文，語氣甜蜜。' },
+  { id:'partner', emoji:'👴',   name:'老伴阿發',   desc:'知心相守，懂你的一切',      persona:'你是阿發，一位溫厚的老伴。用關心體貼的語氣說話，像老朋友一樣聊天。聊聊往事、今天的天氣、吃了什麼。語氣平和、真誠，不說太複雜的話。用繁體中文。' },
+  { id:'butler',  emoji:'🧑‍💼', name:'小明管家',   desc:'活力充沛，帶你玩新鮮事',    persona:'你是小明，一位年輕活力的管家。用輕鬆愉快的語氣說話，告訴長輩新鮮有趣的事，也幫忙安排今天的活動。偶爾推薦遊戲或故事。用繁體中文，活潑但尊重。' },
+  { id:'cat',     emoji:'🐱',   name:'小咪貓咪',   desc:'療癒可愛，陪你最溫柔',      persona:'你是小咪，一隻可愛的貓咪。說話方式像貓咪一樣可愛，偶爾加上「喵~」「咕嚕~」。很愛撒嬌，喜歡問長輩今天有沒有開心。療癒溫柔，用繁體中文。' },
+];
+
+// ─── 故事內容 ───
+const STORIES = [
+  { cat:'台灣民間故事', title:'虎姑婆的傳說', text:'從前從前，山裡住著一隻愛吃小孩手指頭的虎姑婆。每到夜深人靜，她就會假扮成姑婆，敲響村裡孩子的房門……這個故事提醒大家，要聽大人的話，不要隨便開門給陌生人喔！' },
+  { cat:'台語笑話', title:'阿嬤的智慧', text:'有人問阿嬤：「長壽的秘訣是什麼？」阿嬤想了想說：「就是每天笑一笑！」「那如果笑不出來怎麼辦？」阿嬤說：「那就看看鄰居就笑出來了！」哈哈哈 😄' },
+  { cat:'健康小知識', title:'多喝水好處多', text:'水是生命之源！每天喝足 8 杯水（約 2000 毫升），可以幫助排毒、促進新陳代謝、保持皮膚水嫩。記得早上起床先喝一杯溫水，對身體最好喔！' },
+  { cat:'台灣老故事', title:'媽祖保佑漁民', text:'很久以前，台灣的漁民出海前都會到媽祖廟祈福。有一次，海上突然起了大風浪，就在大家絕望之際，天空出現了一道金光，媽祖顯靈保佑，漁船平安返航……' },
+  { cat:'生活智慧', title:'活到老學到老', text:'有位 90 歲的阿嬤，每天早上 7 點起床打太極拳，下午學畫水彩，晚上和孫子視訊聊天。她說：「人要活著，心就不能老。每天學一樣新東西，腦袋就不會生鏽！」' },
+];
+
+// ─── 狀態 ───
+let currentUser = null;
+let currentComp = 0;
+let chatHistory = [];
+let userData = { name:'', score:0, days:0, tasks:0, streak:0, companion:0 };
+let tasks = { medicine:false, water:false, walk:false, bp:false };
+let storyIndex = 0;
+let speechObj = null;
+let isSpeaking = false;
+let bpRecords = [];
+let bsRecords = [];
+let medicines = ['早晨血壓藥', '晚餐後維他命'];
+
+// ─── 工具函數 ───
+window.showToast = function(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+
+function formatDate(d) {
+  const dt = d || new Date();
+  return `${dt.getMonth()+1}/${dt.getDate()} ${String(dt.getHours()).padStart(2,'0')}:${String(dt.getMinutes()).padStart(2,'0')}`;
+}
+
+// ─── 頁面切換 ───
+window.goPage = function(name, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  if(name === 'home') refreshHome();
+  if(name === 'health') renderHealthData();
+  if(name === 'game') { renderLeaderboard(); loadStory(); }
+  if(name === 'profile') refreshProfile();
+};
+
+window.goToChat = function() {
+  goPage('chat', document.querySelectorAll('.nav-item')[1]);
+};
+
+// ─── Auth ───
+window.switchAuthTab = function(tab) {
+  document.getElementById('login-form').style.display = tab==='login' ? 'flex' : 'none';
+  document.getElementById('register-form').style.display = tab==='register' ? 'flex' : 'none';
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (tab==='login'&&i===0)||(tab==='register'&&i===1)));
+};
+
+window.doLogin = async function() {
+  const email = document.getElementById('login-email').value;
+  const pwd = document.getElementById('login-pwd').value;
+  if(!email || !pwd) return showToast('請填寫信箱和密碼');
+  try {
+    await signInWithEmailAndPassword(auth, email, pwd);
+  } catch(e) {
+    showToast('登入失敗：' + (e.code === 'auth/invalid-credential' ? '帳號或密碼錯誤' : e.message));
+  }
+};
+
+window.doRegister = async function() {
+  const name = document.getElementById('reg-name').value;
+  const email = document.getElementById('reg-email').value;
+  const pwd = document.getElementById('reg-pwd').value;
+  if(!name||!email||!pwd) return showToast('請填寫所有欄位');
+  if(pwd.length < 6) return showToast('密碼至少需要 6 個字元');
+  try {
+    const cred = await createUserWithEmailAndPassword(auth, email, pwd);
+    await set(ref(db, `users/${cred.user.uid}`), {
+      name, score:0, days:1, tasks:0, streak:1, companion:0,
+      createdAt: Date.now()
+    });
+    showToast('歡迎加入陪你！🎉');
+  } catch(e) {
+    showToast('註冊失敗：' + (e.code === 'auth/email-already-in-use' ? '此信箱已被使用' : e.message));
+  }
+};
+
+window.doGoogleLogin = async function() {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    const uid = result.user.uid;
+    const snap = await get(ref(db, `users/${uid}`));
+    if(!snap.exists()) {
+      await set(ref(db, `users/${uid}`), {
+        name: result.user.displayName || '新朋友',
+        score:0, days:1, tasks:0, streak:1, companion:0,
+        createdAt: Date.now()
+      });
+    }
+  } catch(e) { showToast('Google 登入失敗'); }
+};
+
+window.doLogout = async function() {
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async (user) => {
+  if(user) {
+    currentUser = user;
+    const snap = await get(ref(db, `users/${user.uid}`));
+    if(snap.exists()) {
+      userData = { ...userData, ...snap.val() };
+      currentComp = userData.companion || 0;
+    }
+    // 載入今日任務
+    const today = new Date().toDateString();
+    const taskSnap = await get(ref(db, `users/${user.uid}/tasks/${today}`));
+    if(taskSnap.exists()) tasks = taskSnap.val();
+
+    // 載入健康記錄
+    loadHealthRecords();
+
+    document.getElementById('page-auth').classList.remove('active');
+    document.getElementById('page-home').classList.add('active');
+    document.getElementById('bottom-nav').style.display = 'flex';
+    refreshHome();
+    initChat();
+    buildMedicineChecklist();
+  } else {
+    currentUser = null;
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById('page-auth').classList.add('active');
+    document.getElementById('bottom-nav').style.display = 'none';
+  }
+});
+
+// ─── 首頁 ───
+function refreshHome() {
+  const hr = new Date().getHours();
+  const greet = hr < 12 ? '早安 ☀️' : hr < 18 ? '午安 🌤️' : '晚安 🌙';
+  document.getElementById('greeting-time').textContent = greet;
+  document.getElementById('greeting-name').textContent = `${userData.name || '朋友'}，歡迎回來！`;
+
+  const c = COMPANIONS[currentComp];
+  document.getElementById('home-comp-avatar').textContent = c.emoji;
+  document.getElementById('home-comp-name').textContent = c.name;
+
+  const speeches = [
+    `今天吃藥了嗎？要記得多喝水喔！💕`,
+    `天氣好棒，出去散步 30 分鐘吧！🚶`,
+    `有沒有量血壓呀？要好好照顧自己喔！`,
+    `今天積分又進步了！你真棒！🏆`,
+    `記得和家人打個電話，讓他們放心喔 📞`,
+  ];
+  document.getElementById('home-comp-speech').textContent = speeches[Math.floor(Math.random()*speeches.length)];
+
+  // 任務狀態
+  Object.keys(tasks).forEach(k => {
+    const item = document.getElementById('task-'+k);
+    const check = document.getElementById('check-'+k);
+    if(tasks[k]) {
+      item.classList.add('done');
+      check.textContent = '✓';
+    } else {
+      item.classList.remove('done');
+      check.textContent = '';
+    }
+  });
+
+  // 積分
+  document.getElementById('hq-score').textContent = userData.score || 0;
+  document.getElementById('hq-streak').textContent = userData.streak || 0;
+
+  // 最新血壓血糖（從本地）
+  if(bpRecords.length > 0) {
+    const last = bpRecords[bpRecords.length-1];
+    document.getElementById('hq-bp').textContent = `${last.sys}/${last.dia}`;
+  }
+  if(bsRecords.length > 0) {
+    document.getElementById('hq-bs').textContent = bsRecords[bsRecords.length-1].val;
+  }
+}
+
+window.toggleTask = async function(key) {
+  tasks[key] = !tasks[key];
+  const today = new Date().toDateString();
+  if(currentUser) {
+    await update(ref(db, `users/${currentUser.uid}/tasks/${today}`), { [key]: tasks[key] });
+  }
+  if(tasks[key]) {
+    userData.score = (userData.score||0) + 20;
+    userData.tasks = (userData.tasks||0) + 1;
+    if(currentUser) update(ref(db, `users/${currentUser.uid}`), { score: userData.score, tasks: userData.tasks });
+    showToast('任務完成！+20 積分 🎉');
+  }
+  refreshHome();
+};
+
+// ─── 健康記錄 ───
+function loadHealthRecords() {
+  if(!currentUser) return;
+  onValue(ref(db, `users/${currentUser.uid}/bp`), snap => {
+    bpRecords = [];
+    if(snap.exists()) {
+      snap.forEach(child => bpRecords.push(child.val()));
+      bpRecords.sort((a,b) => a.ts - b.ts);
+    }
+    renderHealthData();
+  });
+  onValue(ref(db, `users/${currentUser.uid}/bs`), snap => {
+    bsRecords = [];
+    if(snap.exists()) {
+      snap.forEach(child => bsRecords.push(child.val()));
+      bsRecords.sort((a,b) => a.ts - b.ts);
+    }
+    renderHealthData();
+  });
+}
+
+window.saveBP = async function() {
+  const sys = parseInt(document.getElementById('bp-sys').value);
+  const dia = parseInt(document.getElementById('bp-dia').value);
+  const time = document.getElementById('bp-time').value;
+  if(!sys||!dia||sys<60||sys>250||dia<40||dia>150) return showToast('請輸入正確的血壓數值');
+  const rec = { sys, dia, time, ts: Date.now(), date: formatDate() };
+  await push(ref(db, `users/${currentUser.uid}/bp`), rec);
+  document.getElementById('bp-sys').value = '';
+  document.getElementById('bp-dia').value = '';
+  userData.score = (userData.score||0) + 10;
+  update(ref(db, `users/${currentUser.uid}`), { score: userData.score });
+  showToast('血壓記錄成功！+10 積分 ❤️');
+};
+
+window.saveBS = async function() {
+  const val = parseInt(document.getElementById('bs-val').value);
+  const timing = document.getElementById('bs-timing').value;
+  if(!val||val<40||val>600) return showToast('請輸入正確的血糖數值');
+  const rec = { val, timing, ts: Date.now(), date: formatDate() };
+  await push(ref(db, `users/${currentUser.uid}/bs`), rec);
+  document.getElementById('bs-val').value = '';
+  userData.score = (userData.score||0) + 10;
+  update(ref(db, `users/${currentUser.uid}`), { score: userData.score });
+  showToast('血糖記錄成功！+10 積分 🩸');
+};
+
+function renderHealthData() {
+  // 血壓記錄列表
+  const bpList = document.getElementById('bp-records');
+  if(bpList) {
+    bpList.innerHTML = bpRecords.slice().reverse().slice(0,7).map(r => {
+      const status = r.sys > 140 || r.dia > 90 ? 'badge-warn' : 'badge-ok';
+      const statusTxt = r.sys > 140 || r.dia > 90 ? '偏高' : '正常';
+      return `<div class="record-row">
+        <div><div class="record-date">${r.date} ${r.time==='morning'?'早上':'晚上'}</div></div>
+        <div class="record-value">${r.sys}/${r.dia}</div>
+        <div class="record-badge ${status}">${statusTxt}</div>
+      </div>`;
+    }).join('') || '<div style="text-align:center;padding:20px;color:var(--gray)">還沒有記錄，快來記錄第一筆！</div>';
+    drawBPChart();
+  }
+
+  // 血糖列表
+  const bsList = document.getElementById('bs-records');
+  if(bsList) {
+    bsList.innerHTML = bsRecords.slice().reverse().slice(0,7).map(r => {
+      const timingMap = {fasting:'空腹','after-meal':'飯後','before-sleep':'睡前'};
+      const status = r.val > 126 ? 'badge-warn' : 'badge-ok';
+      const statusTxt = r.val > 126 ? '偏高' : '正常';
+      return `<div class="record-row">
+        <div><div class="record-date">${r.date}</div><div class="record-date">${timingMap[r.timing]||''}</div></div>
+        <div class="record-value">${r.val}</div>
+        <div class="record-badge ${status}">${statusTxt}</div>
+      </div>`;
+    }).join('') || '<div style="text-align:center;padding:20px;color:var(--gray)">還沒有記錄喔！</div>';
+  }
+
+  // 首頁更新
+  if(bpRecords.length > 0) {
+    const last = bpRecords[bpRecords.length-1];
+    const el = document.getElementById('hq-bp');
+    if(el) el.textContent = `${last.sys}/${last.dia}`;
+  }
+  if(bsRecords.length > 0) {
+    const el = document.getElementById('hq-bs');
+    if(el) el.textContent = bsRecords[bsRecords.length-1].val;
+  }
+}
+
+function drawBPChart() {
+  const svg = document.getElementById('bp-chart');
+  if(!svg || bpRecords.length < 2) return;
+  const data = bpRecords.slice(-10);
+  const W = 320, H = 100;
+  const sysVals = data.map(r => r.sys);
+  const min = Math.min(...sysVals) - 10;
+  const max = Math.max(...sysVals) + 10;
+
+  const toX = i => (i / (data.length-1)) * (W - 20) + 10;
+  const toY = v => H - ((v - min) / (max - min)) * (H - 20) - 10;
+
+  const points = data.map((r,i) => `${toX(i)},${toY(r.sys)}`).join(' ');
+  svg.innerHTML = `
+    <polyline points="${points}" fill="none" stroke="var(--orange)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+    ${data.map((r,i) => `<circle cx="${toX(i)}" cy="${toY(r.sys)}" r="4" fill="var(--orange)"/>
+    <text x="${toX(i)}" y="${toY(r.sys)-8}" text-anchor="middle" font-size="10" fill="var(--gray)">${r.sys}</text>`).join('')}
+    <line x1="0" y1="${toY(140)}" x2="${W}" y2="${toY(140)}" stroke="#FFB830" stroke-dasharray="4,3" stroke-width="1"/>
+  `;
+}
+
+window.switchHealthTab = function(name, btn) {
+  document.querySelectorAll('.health-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.health-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  btn.classList.add('active');
+};
+
+// ─── 用藥管理 ───
+function buildMedicineChecklist() {
+  const el = document.getElementById('medicine-checklist');
+  if(!el) return;
+  el.innerHTML = medicines.map((m,i) => `
+    <div class="task-item" style="cursor:default">
+      <div class="task-icon">💊</div>
+      <div class="task-info"><div class="task-name">${m}</div></div>
+      <input type="checkbox" style="width:24px;height:24px;accent-color:var(--orange)" onchange="logMedicine('${m}', this.checked)">
+    </div>`).join('');
+}
+
+window.logMedicine = async function(name, checked) {
+  if(!checked || !currentUser) return;
+  const rec = { name, ts: Date.now(), date: formatDate() };
+  await push(ref(db, `users/${currentUser.uid}/medicine-log`), rec);
+  showToast(`✅ 已記錄：${name}`);
+  userData.score = (userData.score||0) + 10;
+  update(ref(db, `users/${currentUser.uid}`), { score: userData.score });
+};
+
+window.addMedicine = function() {
+  const name = prompt('請輸入藥物名稱：');
+  if(name && name.trim()) {
+    medicines.push(name.trim());
+    buildMedicineChecklist();
+    showToast(`已新增：${name.trim()}`);
+  }
+};
+
+// ─── AI 聊天 ───
+function initChat() {
+  const c = COMPANIONS[currentComp];
+  chatHistory = [];
+  const intro = getIntroMessage(c);
+  appendMsg('ai', intro);
+}
+
+function getIntroMessage(c) {
+  const intros = {
+    nurse: `您好！我是曉雯看護 👩‍⚕️\n今天身體狀況好嗎？有沒有按時吃藥呀？`,
+    lover: `嗨嗨～ 今天也好想你喔 💕\n你今天開心嗎？有沒有好好吃飯？`,
+    partner: `嗯…回來啦。今天怎麼樣？\n吃飯了沒？外面天氣好嗎？`,
+    butler: `主人您好！✨ 小明準備好服務您了！\n今天想聊什麼，或是要玩個遊戲？`,
+    cat: `喵喵喵～ 你來啦！小咪想你了 🐱\n咕嚕…今天有沒有開心的事要告訴我？`,
+  };
+  return intros[COMPANIONS[currentComp].id] || '您好！我在這裡陪你喔！';
+}
+
+window.selectComp = function(idx, btn) {
+  currentComp = idx;
+  document.querySelectorAll('.comp-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const c = COMPANIONS[idx];
+  document.getElementById('chat-avatar').textContent = c.emoji;
+  document.getElementById('chat-name').textContent = c.name;
+  document.getElementById('chat-desc').textContent = c.desc;
+  document.getElementById('chat-messages').innerHTML = '';
+  chatHistory = [];
+  appendMsg('ai', getIntroMessage(c));
+  if(currentUser) update(ref(db, `users/${currentUser.uid}`), { companion: idx });
+  userData.companion = idx;
+};
+
+function appendMsg(role, text) {
+  const container = document.getElementById('chat-messages');
+  const now = new Date();
+  const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const div = document.createElement('div');
+  div.className = `msg msg-${role}`;
+  div.innerHTML = `${text.replace(/\n/g,'<br>')}<div class="msg-time">${timeStr}</div>`;
+  container.appendChild(div);
+  container.scrollTop = container.scrollHeight;
+}
+
+window.sendMessage = async function() {
+  const input = document.getElementById('chat-input');
+  const text = input.value.trim();
+  if(!text) return;
+  input.value = '';
+  input.style.height = 'auto';
+
+  appendMsg('user', text);
+  chatHistory.push({ role:'user', content: text });
+
+  // 打字指示器
+  const container = document.getElementById('chat-messages');
+  const typing = document.createElement('div');
+  typing.className = 'typing-indicator';
+  typing.innerHTML = '<div class="typing-dot"></div><div class="typing-dot"></div><div class="typing-dot"></div>';
+  container.appendChild(typing);
+  container.scrollTop = container.scrollHeight;
+
+  try {
+    const c = COMPANIONS[currentComp];
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-6',
+        max_tokens: 300,
+        system: c.persona + '\n\n請記得：說話要簡短（不超過 3 句），使用繁體中文，語氣親切溫暖，適合年長者閱讀。',
+        messages: chatHistory.slice(-10),
+      })
+    });
+    const data = await res.json();
+    typing.remove();
+    const reply = data.content?.[0]?.text || '我聽到你說的了，你說得很對喔！';
+    appendMsg('ai', reply);
+    chatHistory.push({ role:'assistant', content: reply });
+
+    // 儲存對話紀錄
+    if(currentUser) {
+      push(ref(db, `users/${currentUser.uid}/chats`), {
+        comp: COMPANIONS[currentComp].id,
+        user: text, ai: reply,
+        ts: Date.now()
+      });
+      userData.score = (userData.score||0) + 5;
+      update(ref(db, `users/${currentUser.uid}`), { score: userData.score });
+    }
+  } catch(e) {
+    typing.remove();
+    appendMsg('ai', '不好意思，我剛才沒聽清楚，可以再說一次嗎？😊');
+  }
+};
+
+// ─── 故事會 ───
+window.loadStory = function() {
+  storyIndex = Math.floor(Math.random() * STORIES.length);
+  const s = STORIES[storyIndex];
+  document.getElementById('story-cat').textContent = s.cat;
+  document.getElementById('story-title').textContent = s.title;
+  document.getElementById('story-text').textContent = s.text;
+  document.getElementById('play-btn').textContent = '▶ 播放語音';
+  isSpeaking = false;
+  if(speechObj) { speechSynthesis.cancel(); speechObj = null; }
+};
+
+window.toggleStory = function() {
+  if(!('speechSynthesis' in window)) return showToast('此裝置不支援語音播放');
+  if(isSpeaking) {
+    speechSynthesis.cancel();
+    isSpeaking = false;
+    document.getElementById('play-btn').textContent = '▶ 播放語音';
+  } else {
+    const s = STORIES[storyIndex];
+    const utter = new SpeechSynthesisUtterance(s.title + '。' + s.text);
+    utter.lang = 'zh-TW';
+    utter.rate = 0.85;
+    utter.pitch = 1.0;
+    utter.onend = () => { isSpeaking = false; document.getElementById('play-btn').textContent = '▶ 播放語音'; };
+    speechSynthesis.speak(utter);
+    speechObj = utter;
+    isSpeaking = true;
+    document.getElementById('play-btn').textContent = '⏸ 暫停';
+    showToast('語音播放中…');
+  }
+};
+
+loadStory();
+
+// ─── 排行榜 ───
+function renderLeaderboard() {
+  const mockData = [
+    { name:'李阿公', emoji:'👴', score: 1280 + (userData.score||0) },
+    { name: userData.name||'你', emoji:'😊', score: userData.score||0, isMe: true },
+    { name:'陳阿嬤', emoji:'👵', score: 980 },
+    { name:'王伯伯', emoji:'👨', score: 760 },
+    { name:'張奶奶', emoji:'🧓', score: 540 },
+  ];
+  mockData.sort((a,b) => b.score - a.score);
+
+  const rankEmoji = ['🥇','🥈','🥉'];
+  const rankClass = ['gold-rank','silver-rank','bronze-rank'];
+  const el = document.getElementById('leaderboard');
+  if(!el) return;
+  el.innerHTML = mockData.map((p,i) => `
+    <div class="lb-row" style="${p.isMe ? 'border:2px solid var(--orange)' : ''}">
+      <div class="lb-rank ${rankClass[i]||''}">${rankEmoji[i]||i+1}</div>
+      <div class="lb-avatar">${p.emoji}</div>
+      <div class="lb-name">${p.name}${p.isMe?' (你)':''}</div>
+      <div class="lb-score">${p.score}</div>
+    </div>`).join('');
+}
+
+// ─── 遊戲 ───
+window.openGame = function(type) {
+  if(type === 'mahjong') showToast('麻將遊戲開發中，即將上線！🀄');
+  else if(type === 'chess') showToast('象棋遊戲開發中，即將上線！♟️');
+  else if(type === 'quiz') openQuiz();
+  else if(type === 'photo') showToast('拍照打卡：請用手機相機拍一張今天的美麗照片！📸');
+};
+
+function openQuiz() {
+  const q = [
+    { q:'台灣最高的山是？', opts:['玉山','阿里山','合歡山','雪山'], ans:0 },
+    { q:'每天建議喝幾杯水？', opts:['3 杯','5 杯','8 杯','10 杯'], ans:2 },
+    { q:'媽祖是哪位神明？', opts:['財神','海神','月神','土地公'], ans:1 },
+  ];
+  const qi = Math.floor(Math.random()*q.length);
+  const qd = q[qi];
+  const ans = prompt(`腦力小測驗！\n\n${qd.q}\n\nA. ${qd.opts[0]}\nB. ${qd.opts[1]}\nC. ${qd.opts[2]}\nD. ${qd.opts[3]}\n\n請輸入 A / B / C / D`);
+  const map = {a:0,b:1,c:2,d:3};
+  const chosen = map[(ans||'').toLowerCase().trim()];
+  if(chosen === qd.ans) {
+    showToast('答對了！超聰明！+30 積分 🧠🎉');
+    userData.score = (userData.score||0) + 30;
+    if(currentUser) update(ref(db, `users/${currentUser.uid}`), { score: userData.score });
+  } else if(chosen !== undefined) {
+    showToast(`答案是 ${['A','B','C','D'][qd.ans]}，${qd.opts[qd.ans]}！繼續加油喔！`);
+  }
+}
+
+// ─── 角色選擇彈窗 ───
+window.openCompModal = function() {
+  const grid = document.getElementById('comp-grid');
+  grid.innerHTML = COMPANIONS.map((c,i) => `
+    <div class="comp-choice ${i===currentComp?'selected':''}" onclick="highlightComp(this, ${i})">
+      <span>${c.emoji}</span>
+      <span>${c.name}</span>
+    </div>`).join('');
+  document.getElementById('comp-modal').classList.add('show');
+};
+
+let pendingComp = currentComp;
+window.highlightComp = function(el, idx) {
+  document.querySelectorAll('.comp-choice').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  pendingComp = idx;
+};
+
+window.saveCompanion = function() {
+  currentComp = pendingComp;
+  userData.companion = currentComp;
+  if(currentUser) update(ref(db, `users/${currentUser.uid}`), { companion: currentComp });
+  closeCompModal();
+  showToast(`已選擇 ${COMPANIONS[currentComp].name}！💛`);
+  refreshHome();
+};
+
+window.closeCompModal = function(e) {
+  if(!e || e.target === document.getElementById('comp-modal'))
+    document.getElementById('comp-modal').classList.remove('show');
+};
+
+// ══════════════════════════════════════
+// 社群系統 Social System
+// ══════════════════════════════════════
+
+let currentGroupId = null;
+let currentGroupData = null;
+let groupMsgListener = null;
+let selectedGroupType = 'family';
+
+// 頁面初始化時載入社群資料
+function initSocial() {
+  if (!currentUser) return;
+  const shortUid = currentUser.uid.slice(0, 12);
+  document.getElementById('my-uid-display').textContent = shortUid;
+  loadFriends();
+  loadGroups();
+  loadTeamLeaderboard();
+}
+
+window.copyMyCode = function() {
+  const code = currentUser.uid.slice(0, 12);
+  navigator.clipboard.writeText(code).catch(() => {});
+  showToast('代號已複製！分享給好友吧 📋');
+};
+
+// ─── 頁籤切換 ───
+window.switchSocialTab = function(name, btn) {
+  document.querySelectorAll('.social-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.social-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'teams') loadTeamLeaderboard();
+};
+
+// ══════════════════════════════════════
+// 好友系統
+// ══════════════════════════════════════
+
+window.sendFriendRequest = async function() {
+  const code = document.getElementById('friend-code-input').value.trim();
+  if (!code) return showToast('請輸入對方的用戶代號');
+  if (code === currentUser.uid.slice(0, 12)) return showToast('不能加自己為好友喔 😄');
+
+  // 搜尋符合代號的用戶
+  const snap = await get(ref(db, 'users'));
+  let targetUid = null;
+  snap.forEach(child => {
+    if (child.key.startsWith(code)) targetUid = child.key;
+  });
+
+  if (!targetUid) return showToast('找不到此代號的用戶，請再確認');
+
+  // 檢查已是好友
+  const existSnap = await get(ref(db, `users/${currentUser.uid}/friends/${targetUid}`));
+  if (existSnap.exists()) return showToast('你們已經是好友了！');
+
+  // 送出邀請
+  await set(ref(db, `friend-requests/${targetUid}/${currentUser.uid}`), {
+    fromUid: currentUser.uid,
+    fromName: userData.name || '陪你用戶',
+    ts: Date.now(),
+    status: 'pending'
+  });
+
+  document.getElementById('friend-code-input').value = '';
+  showToast('好友邀請已送出！等待對方接受 💌');
+};
+
+function loadFriends() {
+  if (!currentUser) return;
+
+  // 監聽好友邀請
+  onValue(ref(db, `friend-requests/${currentUser.uid}`), snap => {
+    const el = document.getElementById('pending-requests');
+    if (!el) return;
+    let html = '';
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const req = child.val();
+        if (req.status === 'pending') {
+          html += `<div class="pending-card">
+            <div style="font-size:32px">👋</div>
+            <div style="flex:1">
+              <div style="font-weight:700;color:var(--deep)">${req.fromName}</div>
+              <div style="font-size:12px;color:var(--gray)">想加你為好友</div>
+            </div>
+            <div class="pending-actions">
+              <button class="pa-accept" onclick="acceptFriend('${child.key}','${req.fromName}')">接受</button>
+              <button class="pa-decline" onclick="declineFriend('${child.key}')">拒絕</button>
+            </div>
+          </div>`;
+        }
+      });
+    }
+    el.innerHTML = html;
+  });
+
+  // 監聽好友列表
+  onValue(ref(db, `users/${currentUser.uid}/friends`), async snap => {
+    const el = document.getElementById('friends-list');
+    const countEl = document.getElementById('friends-count');
+    if (!el) return;
+    if (!snap.exists()) {
+      countEl.textContent = '我的好友（0）';
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)"><div style="font-size:40px;margin-bottom:8px">👋</div>還沒有好友，快分享代號邀請朋友吧！</div>';
+      return;
+    }
+    const friends = [];
+    snap.forEach(child => friends.push({ uid: child.key, ...child.val() }));
+    countEl.textContent = `我的好友（${friends.length}）`;
+
+    el.innerHTML = friends.map(f => `
+      <div class="friend-item">
+        <div class="friend-avatar">${f.emoji || '👤'}<div class="friend-online"></div></div>
+        <div class="friend-info">
+          <div class="friend-name">${f.name || '好友'}</div>
+          <div class="friend-status">積分 ${f.score || 0} · ${f.level || '健康達人'}</div>
+        </div>
+        <div class="friend-actions">
+          <button class="fa-btn fa-chat" onclick="openPrivateChat('${f.uid}','${f.name || '好友'}')">聊天</button>
+        </div>
+      </div>`).join('');
+  });
+}
+
+window.acceptFriend = async function(fromUid, fromName) {
+  const myName = userData.name || '陪你用戶';
+  const myScore = userData.score || 0;
+  // 互相加好友
+  await set(ref(db, `users/${currentUser.uid}/friends/${fromUid}`), {
+    name: fromName, addedAt: Date.now(), score: 0, emoji: '👤', level: '健康達人'
+  });
+  await set(ref(db, `users/${fromUid}/friends/${currentUser.uid}`), {
+    name: myName, addedAt: Date.now(), score: myScore, emoji: '👤', level: '健康達人'
+  });
+  // 刪除邀請
+  await set(ref(db, `friend-requests/${currentUser.uid}/${fromUid}`), null);
+  showToast(`已和 ${fromName} 成為好友！🎉`);
+};
+
+window.declineFriend = async function(fromUid) {
+  await set(ref(db, `friend-requests/${currentUser.uid}/${fromUid}`), null);
+  showToast('已拒絕邀請');
+};
+
+// 私訊（用群組聊天室實現）
+window.openPrivateChat = function(friendUid, friendName) {
+  // 建立或找到私訊頻道
+  const ids = [currentUser.uid, friendUid].sort();
+  const chatId = 'dm_' + ids.join('_');
+  openGroupChat(chatId, {
+    name: friendName,
+    icon: '💬',
+    type: 'dm',
+    members: { [currentUser.uid]: userData.name, [friendUid]: friendName }
+  });
+};
+
+// ══════════════════════════════════════
+// 群組系統
+// ══════════════════════════════════════
+
+window.openCreateGroup = function() {
+  document.getElementById('create-modal-title').textContent = '建立新群組';
+  document.getElementById('new-group-name').value = '';
+  selectedGroupType = 'family';
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+  document.querySelector('.type-card').classList.add('selected');
+  document.getElementById('create-modal').classList.add('show');
+};
+
+window.openCreateTeam = function() {
+  document.getElementById('create-modal-title').textContent = '建立遊戲戰隊';
+  document.getElementById('new-group-name').value = '';
+  selectedGroupType = 'team';
+  document.querySelectorAll('.type-card').forEach((c, i) => c.classList.toggle('selected', i === 2));
+  document.getElementById('create-modal').classList.add('show');
+};
+
+window.selectGroupType = function(el, type) {
+  document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+  el.classList.add('selected');
+  selectedGroupType = type;
+};
+
+window.closeCreateModal = function(e) {
+  if (!e || e.target === document.getElementById('create-modal'))
+    document.getElementById('create-modal').classList.remove('show');
+};
+
+window.createGroup = async function() {
+  const name = document.getElementById('new-group-name').value.trim();
+  if (!name) return showToast('請輸入群組名稱');
+
+  const icons = { family: '🏠', friends: '👥', team: '⚔️' };
+  const inviteCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+  const groupRef = push(ref(db, 'groups'));
+  const groupId = groupRef.key;
+
+  await set(groupRef, {
+    name,
+    type: selectedGroupType,
+    icon: icons[selectedGroupType],
+    inviteCode,
+    createdBy: currentUser.uid,
+    createdAt: Date.now(),
+    members: { [currentUser.uid]: { name: userData.name || '群主', role: 'admin', joinedAt: Date.now() } },
+    score: 0
+  });
+
+  // 將群組加入用戶資料
+  await set(ref(db, `users/${currentUser.uid}/groups/${groupId}`), { name, type: selectedGroupType, icon: icons[selectedGroupType] });
+
+  closeCreateModal();
+  showToast(`群組「${name}」建立成功！邀請碼：${inviteCode} 🎉`);
+  loadGroups();
+};
+
+window.joinGroupByCode = async function() {
+  const code = document.getElementById('group-code-input').value.trim().toUpperCase();
+  if (!code) return showToast('請輸入邀請碼');
+  await joinByCode(code, 'groups');
+  document.getElementById('group-code-input').value = '';
+};
+
+window.joinTeamByCode = async function() {
+  const code = document.getElementById('team-code-input').value.trim().toUpperCase();
+  if (!code) return showToast('請輸入戰隊邀請碼');
+  await joinByCode(code, 'groups');
+  document.getElementById('team-code-input').value = '';
+};
+
+async function joinByCode(code, collection) {
+  const snap = await get(ref(db, collection));
+  let found = null, foundId = null;
+  snap.forEach(child => {
+    if (child.val().inviteCode === code) { found = child.val(); foundId = child.key; }
+  });
+  if (!found) return showToast('找不到此邀請碼，請確認後再試');
+
+  // 已在群組
+  const memberSnap = await get(ref(db, `groups/${foundId}/members/${currentUser.uid}`));
+  if (memberSnap.exists()) return showToast('你已經在這個群組了！');
+
+  await set(ref(db, `groups/${foundId}/members/${currentUser.uid}`), {
+    name: userData.name || '成員', role: 'member', joinedAt: Date.now()
+  });
+  await set(ref(db, `users/${currentUser.uid}/groups/${foundId}`), {
+    name: found.name, type: found.type, icon: found.icon
+  });
+  // 加入訊息
+  await push(ref(db, `group-messages/${foundId}`), {
+    text: `${userData.name || '新成員'} 加入了群組 👋`,
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  showToast(`成功加入「${found.name}」！🎉`);
+  loadGroups();
+}
+
+function loadGroups() {
+  if (!currentUser) return;
+  onValue(ref(db, `users/${currentUser.uid}/groups`), snap => {
+    const el = document.getElementById('groups-list');
+    if (!el) return;
+    if (!snap.exists()) {
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)"><div style="font-size:40px;margin-bottom:8px">🏠</div>還沒有群組，建立一個家人群吧！</div>';
+      return;
+    }
+    const groups = [];
+    snap.forEach(child => groups.push({ id: child.key, ...child.val() }));
+    el.innerHTML = groups.map(g => `
+      <div class="group-card" onclick="openGroupChat('${g.id}', ${JSON.stringify({name:g.name,icon:g.icon,type:g.type}).replace(/"/g,'&quot;')})">
+        <div class="group-header">
+          <div class="group-icon ${g.type || 'friends'}">${g.icon || '👥'}</div>
+          <div style="flex:1">
+            <div class="group-name">${g.name}</div>
+            <div class="group-members" id="gmem-${g.id}">載入成員中…</div>
+          </div>
+          <div class="group-unread" id="gunread-${g.id}" style="display:none">新</div>
+        </div>
+        <div class="group-last-msg" id="glast-${g.id}">點擊進入聊天室</div>
+      </div>`).join('');
+
+    // 載入每個群組最新訊息和成員數
+    groups.forEach(g => loadGroupPreview(g.id));
+  });
+}
+
+function loadGroupPreview(groupId) {
+  // 成員數
+  get(ref(db, `groups/${groupId}/members`)).then(snap => {
+    const el = document.getElementById('gmem-' + groupId);
+    if (el && snap.exists()) el.textContent = `${snap.size} 位成員`;
+  });
+  // 最新訊息
+  get(ref(db, `group-messages/${groupId}`)).then(snap => {
+    const el = document.getElementById('glast-' + groupId);
+    if (!el || !snap.exists()) return;
+    let last = null;
+    snap.forEach(child => last = child.val());
+    if (last) el.textContent = `${last.senderName === '系統' ? '' : last.senderName + '：'}${last.text}`;
+  });
+}
+
+// ══════════════════════════════════════
+// 群組聊天室
+// ══════════════════════════════════════
+
+window.openGroupChat = function(groupId, groupInfo) {
+  currentGroupId = groupId;
+  currentGroupData = groupInfo;
+
+  document.getElementById('gc-avatar').textContent = groupInfo.icon || '👥';
+  document.getElementById('gc-name').textContent = groupInfo.name;
+  document.getElementById('gc-messages').innerHTML = '';
+
+  // 載入成員數
+  get(ref(db, `groups/${groupId}/members`)).then(snap => {
+    const el = document.getElementById('gc-members');
+    if (el && snap.exists()) el.textContent = `${snap.size} 位成員`;
+  }).catch(() => {
+    document.getElementById('gc-members').textContent = '私訊';
+  });
+
+  document.getElementById('group-chat-page').classList.add('open');
+
+  // 移除舊的監聽器
+  if (groupMsgListener) groupMsgListener();
+
+  // 即時監聽訊息
+  groupMsgListener = onValue(ref(db, `group-messages/${groupId}`), snap => {
+    const container = document.getElementById('gc-messages');
+    if (!container) return;
+    container.innerHTML = '';
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const msg = child.val();
+        if (msg.sender === 'system') {
+          const div = document.createElement('div');
+          div.style.cssText = 'text-align:center;font-size:13px;color:var(--gray);padding:8px 0';
+          div.textContent = msg.text;
+          container.appendChild(div);
+        } else {
+          const isMe = msg.sender === currentUser.uid;
+          const div = document.createElement('div');
+          div.className = 'gc-msg' + (isMe ? ' mine' : '');
+          const time = new Date(msg.ts);
+          const timeStr = `${String(time.getHours()).padStart(2,'0')}:${String(time.getMinutes()).padStart(2,'0')}`;
+          div.innerHTML = `
+            ${!isMe ? `<div class="gc-msg-avatar">${msg.senderEmoji || '👤'}</div>` : ''}
+            <div>
+              ${!isMe ? `<div class="gc-sender">${msg.senderName}</div>` : ''}
+              <div class="gc-bubble">${msg.text}</div>
+              <div class="gc-time">${timeStr}</div>
+            </div>`;
+          container.appendChild(div);
+        }
+      });
+      container.scrollTop = container.scrollHeight;
+    }
+  });
+};
+
+window.closeGroupChat = function() {
+  document.getElementById('group-chat-page').classList.remove('open');
+  if (groupMsgListener) { groupMsgListener(); groupMsgListener = null; }
+  currentGroupId = null;
+};
+
+window.sendGroupMsg = async function() {
+  const input = document.getElementById('gc-input');
+  const text = input.value.trim();
+  if (!text || !currentGroupId) return;
+  input.value = '';
+
+  await push(ref(db, `group-messages/${currentGroupId}`), {
+    text,
+    sender: currentUser.uid,
+    senderName: userData.name || '成員',
+    senderEmoji: '😊',
+    ts: Date.now()
+  });
+
+  // 戰隊積分累積
+  if (currentGroupData?.type === 'team') {
+    const teamScoreRef = ref(db, `groups/${currentGroupId}/score`);
+    const snap = await get(teamScoreRef);
+    await set(teamScoreRef, (snap.val() || 0) + 2);
+  }
+};
+
+window.showGroupInfo = async function() {
+  if (!currentGroupId) return;
+  openAdminPanel(currentGroupId);
+};
+
+// ══════════════════════════════════════
+// 群組管理員系統 Admin System
+// ══════════════════════════════════════
+
+let adminGroupId = null;
+let adminGroupData = null;
+let adminMembersListener = null;
+let confirmCallback = null;
+let renameTarget = null; // 'group' | 'member'
+let renameMemberUid = null;
+
+// ─── 開啟管理面板 ───
+window.openAdminPanel = async function(groupId) {
+  adminGroupId = groupId;
+  document.getElementById('admin-panel').classList.add('open');
+  await refreshAdminPanel();
+};
+
+window.closeAdminPanel = function() {
+  document.getElementById('admin-panel').classList.remove('open');
+  if (adminMembersListener) { adminMembersListener(); adminMembersListener = null; }
+  adminGroupId = null;
+};
+
+async function refreshAdminPanel() {
+  if (!adminGroupId) return;
+  const snap = await get(ref(db, `groups/${adminGroupId}`));
+  if (!snap.exists()) return showToast('找不到群組資料');
+  adminGroupData = snap.val();
+
+  const typeMap = { family: '家人群 🏠', friends: '好友群 👥', team: '遊戲戰隊 ⚔️', dm: '私訊 💬' };
+  const memberCount = Object.keys(adminGroupData.members || {}).length;
+  const createdDate = adminGroupData.createdAt
+    ? new Date(adminGroupData.createdAt).toLocaleDateString('zh-TW')
+    : '不明';
+
+  document.getElementById('admin-group-name').textContent = adminGroupData.name;
+  document.getElementById('admin-group-meta').textContent = `${typeMap[adminGroupData.type] || '群組'} · ${memberCount} 位成員`;
+  document.getElementById('admin-info-name').textContent = adminGroupData.name;
+  document.getElementById('admin-info-type').textContent = typeMap[adminGroupData.type] || '群組';
+  document.getElementById('admin-info-count').textContent = `${memberCount} 人`;
+  document.getElementById('admin-invite-code').textContent = adminGroupData.inviteCode || '無';
+  document.getElementById('admin-created-at').textContent = createdDate;
+
+  // 設定狀態
+  const requireApproval = adminGroupData.requireApproval || false;
+  const muteAll = adminGroupData.muteAll || false;
+  document.getElementById('approval-desc').textContent = requireApproval ? '目前：新成員需管理員審核' : '目前：任何人可直接加入';
+  document.getElementById('approval-icon').textContent = requireApproval ? '🔒' : '🔓';
+  document.getElementById('mute-desc').textContent = muteAll ? '目前：全員禁言中' : '目前：成員可自由發言';
+  document.getElementById('mute-icon').textContent = muteAll ? '🔕' : '💬';
+
+  // 判斷自己是否為管理員
+  const myRole = adminGroupData.members?.[currentUser.uid]?.role;
+  const isAdmin = myRole === 'admin';
+
+  // 成員列表（即時監聽）
+  if (adminMembersListener) adminMembersListener();
+  adminMembersListener = onValue(ref(db, `groups/${adminGroupId}/members`), membSnap => {
+    renderAdminMembers(membSnap, isAdmin);
+  });
+}
+
+function renderAdminMembers(membSnap, isAdmin) {
+  const el = document.getElementById('admin-members-list');
+  if (!el || !membSnap.exists()) {
+    el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--gray)">暫無成員</div>';
+    return;
+  }
+
+  const members = [];
+  membSnap.forEach(child => members.push({ uid: child.key, ...child.val() }));
+
+  // 排序：admin > mod > member，同級按加入時間
+  const roleOrder = { admin: 0, mod: 1, member: 2 };
+  members.sort((a, b) => (roleOrder[a.role] ?? 2) - (roleOrder[b.role] ?? 2) || (a.joinedAt - b.joinedAt));
+
+  const roleLabel = { admin: '群主', mod: '管理員', member: '成員' };
+  const roleClass = { admin: 'role-admin', mod: 'role-mod', member: 'role-member' };
+
+  el.innerHTML = members.map(m => {
+    const isMe = m.uid === currentUser.uid;
+    const canManage = isAdmin && !isMe;
+    const joinDate = m.joinedAt ? new Date(m.joinedAt).toLocaleDateString('zh-TW') : '';
+
+    let actions = '';
+    if (canManage) {
+      if (m.role === 'member') {
+        actions += `<button class="ma-btn ma-promote" onclick="promoteMember('${m.uid}','${m.name}','mod')">升為管理員</button>`;
+      }
+      if (m.role === 'mod') {
+        actions += `<button class="ma-btn ma-demote" onclick="promoteMember('${m.uid}','${m.name}','member')">撤銷管理員</button>`;
+      }
+      if (m.role !== 'admin') {
+        actions += `<button class="ma-btn ma-kick" onclick="confirmKick('${m.uid}','${m.name}')">踢出群組</button>`;
+        actions += `<button class="ma-btn ma-ban" onclick="confirmBan('${m.uid}','${m.name}')">封禁用戶</button>`;
+      }
+      if (m.role !== 'admin') {
+        actions += `<button class="ma-btn ma-transfer" onclick="confirmTransfer('${m.uid}','${m.name}')">移交群主</button>`;
+      }
+    }
+
+    return `
+      <div class="member-manage-item">
+        <div class="member-main-row">
+          <div class="mm-avatar">${m.emoji || '👤'}</div>
+          <div class="mm-info">
+            <div class="mm-name">${m.name || '成員'}${isMe ? ' （我）' : ''}</div>
+            <div class="mm-meta">加入：${joinDate}${m.banned ? ' · ⛔ 已封禁' : ''}</div>
+          </div>
+          <div class="mm-role-badge ${roleClass[m.role] || 'role-member'}">${roleLabel[m.role] || '成員'}</div>
+        </div>
+        ${actions ? `<div class="member-actions">${actions}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ─── 設定操作 ───
+window.toggleJoinApproval = async function() {
+  if (!isCurrentUserAdmin()) return showToast('只有群主可以更改此設定');
+  const current = adminGroupData?.requireApproval || false;
+  await update(ref(db, `groups/${adminGroupId}`), { requireApproval: !current });
+  adminGroupData.requireApproval = !current;
+  document.getElementById('approval-desc').textContent = !current ? '目前：新成員需管理員審核' : '目前：任何人可直接加入';
+  document.getElementById('approval-icon').textContent = !current ? '🔒' : '🔓';
+  showToast(!current ? '已開啟加入審核 🔒' : '已關閉加入審核 🔓');
+};
+
+window.toggleMuteAll = async function() {
+  if (!isCurrentUserAdminOrMod()) return showToast('需要管理員以上權限');
+  const current = adminGroupData?.muteAll || false;
+  await update(ref(db, `groups/${adminGroupId}`), { muteAll: !current });
+  adminGroupData.muteAll = !current;
+  document.getElementById('mute-desc').textContent = !current ? '目前：全員禁言中' : '目前：成員可自由發言';
+  document.getElementById('mute-icon').textContent = !current ? '🔕' : '💬';
+  await push(ref(db, `group-messages/${adminGroupId}`), {
+    text: !current ? '管理員已開啟全員禁言 🔕' : '管理員已解除全員禁言 💬',
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  showToast(!current ? '已開啟全員禁言 🔕' : '已解除全員禁言 💬');
+};
+
+window.openAnnouncement = function() {
+  if (!isCurrentUserAdminOrMod()) return showToast('需要管理員以上權限');
+  renameTarget = 'announcement';
+  document.getElementById('rename-title').textContent = '📢 發布群組公告';
+  document.getElementById('rename-input').placeholder = '輸入公告內容…';
+  document.getElementById('rename-input').value = '';
+  document.getElementById('rename-overlay').classList.add('show');
+};
+
+// ─── 成員操作 ───
+window.promoteMember = async function(uid, name, newRole) {
+  if (!isCurrentUserAdmin()) return showToast('只有群主可以更改成員身份');
+  await update(ref(db, `groups/${adminGroupId}/members/${uid}`), { role: newRole });
+  const roleLabel = { mod: '管理員', member: '一般成員' };
+  await push(ref(db, `group-messages/${adminGroupId}`), {
+    text: `${name} 已被設為${roleLabel[newRole]} ${newRole === 'mod' ? '⭐' : ''}`,
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  showToast(`已將 ${name} 設為${roleLabel[newRole]}`);
+};
+
+window.confirmKick = function(uid, name) {
+  showConfirm({
+    icon: '👢',
+    title: `踢出 ${name}？`,
+    desc: `將 ${name} 踢出群組後，對方需要重新使用邀請碼才能加入。`,
+    okText: '確認踢出',
+    okClass: 'danger',
+    callback: () => kickMember(uid, name)
+  });
+};
+
+async function kickMember(uid, name) {
+  // 從群組成員移除
+  await set(ref(db, `groups/${adminGroupId}/members/${uid}`), null);
+  // 從用戶的群組列表移除
+  await set(ref(db, `users/${uid}/groups/${adminGroupId}`), null);
+  // 系統訊息
+  await push(ref(db, `group-messages/${adminGroupId}`), {
+    text: `${name} 已被管理員移出群組`,
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  showToast(`已將 ${name} 踢出群組 👢`);
+}
+
+window.confirmBan = function(uid, name) {
+  showConfirm({
+    icon: '⛔',
+    title: `封禁 ${name}？`,
+    desc: `封禁後，${name} 將無法再加入此群組，且被標記為封禁狀態。`,
+    okText: '確認封禁',
+    okClass: 'danger',
+    callback: () => banMember(uid, name)
+  });
+};
+
+async function banMember(uid, name) {
+  // 踢出 + 標記封禁
+  await set(ref(db, `groups/${adminGroupId}/members/${uid}`), null);
+  await set(ref(db, `users/${uid}/groups/${adminGroupId}`), null);
+  // 記錄封禁名單
+  await set(ref(db, `groups/${adminGroupId}/banned/${uid}`), {
+    name, bannedAt: Date.now(), bannedBy: currentUser.uid
+  });
+  await push(ref(db, `group-messages/${adminGroupId}`), {
+    text: `${name} 已被管理員封禁 ⛔`,
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  showToast(`已封禁 ${name} ⛔`);
+}
+
+window.confirmTransfer = function(uid, name) {
+  showConfirm({
+    icon: '👑',
+    title: `移交群主給 ${name}？`,
+    desc: `移交後，你將降為一般成員，${name} 將成為新的群主，此操作不可逆。`,
+    okText: '確認移交',
+    okClass: 'warn',
+    callback: () => transferAdmin(uid, name)
+  });
+};
+
+async function transferAdmin(uid, name) {
+  // 新群主
+  await update(ref(db, `groups/${adminGroupId}/members/${uid}`), { role: 'admin' });
+  // 自己降為成員
+  await update(ref(db, `groups/${adminGroupId}/members/${currentUser.uid}`), { role: 'member' });
+  await update(ref(db, `groups/${adminGroupId}`), { createdBy: uid });
+  await push(ref(db, `group-messages/${adminGroupId}`), {
+    text: `群主已移交給 ${name} 👑`,
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  showToast(`群主已移交給 ${name} 👑`);
+  closeAdminPanel();
+}
+
+// ─── 危險區域 ───
+window.confirmDissolveGroup = function() {
+  if (!isCurrentUserAdmin()) return showToast('只有群主可以解散群組');
+  showConfirm({
+    icon: '💥',
+    title: '解散群組？',
+    desc: `解散「${adminGroupData?.name}」後，所有聊天記錄和成員資料將永久刪除，無法復原。`,
+    okText: '確認解散',
+    okClass: 'danger',
+    callback: dissolveGroup
+  });
+};
+
+async function dissolveGroup() {
+  const gid = adminGroupId;
+  const gname = adminGroupData?.name;
+  // 移除所有成員的群組記錄
+  const membSnap = await get(ref(db, `groups/${gid}/members`));
+  if (membSnap.exists()) {
+    const promises = [];
+    membSnap.forEach(child => {
+      promises.push(set(ref(db, `users/${child.key}/groups/${gid}`), null));
+    });
+    await Promise.all(promises);
+  }
+  // 刪除群組本體和訊息
+  await set(ref(db, `groups/${gid}`), null);
+  await set(ref(db, `group-messages/${gid}`), null);
+  closeAdminPanel();
+  closeGroupChat();
+  loadGroups();
+  showToast(`群組「${gname}」已解散`);
+}
+
+window.confirmLeaveGroup = function() {
+  if (isCurrentUserAdmin()) {
+    return showToast('群主請先移交群主身份，再離開群組');
+  }
+  showConfirm({
+    icon: '🚪',
+    title: '離開群組？',
+    desc: `離開「${adminGroupData?.name}」後，需要邀請碼才能重新加入。`,
+    okText: '確認離開',
+    okClass: 'warn',
+    callback: leaveGroup
+  });
+};
+
+async function leaveGroup() {
+  const gid = adminGroupId;
+  const gname = adminGroupData?.name;
+  await set(ref(db, `groups/${gid}/members/${currentUser.uid}`), null);
+  await set(ref(db, `users/${currentUser.uid}/groups/${gid}`), null);
+  await push(ref(db, `group-messages/${gid}`), {
+    text: `${userData.name || '成員'} 離開了群組`,
+    sender: 'system', senderName: '系統', ts: Date.now()
+  });
+  closeAdminPanel();
+  closeGroupChat();
+  loadGroups();
+  showToast(`已離開群組「${gname}」`);
+}
+
+// ─── 邀請碼管理 ───
+window.copyInviteCode = function() {
+  const code = adminGroupData?.inviteCode;
+  if (!code) return;
+  navigator.clipboard.writeText(code).catch(() => {});
+  showToast(`邀請碼 ${code} 已複製 📋`);
+};
+
+window.regenInviteCode = function() {
+  if (!isCurrentUserAdmin()) return showToast('只有群主可以重新產生邀請碼');
+  showConfirm({
+    icon: '🔄',
+    title: '重新產生邀請碼？',
+    desc: '舊的邀請碼將失效，需將新邀請碼重新分享給朋友。',
+    okText: '確認重產',
+    okClass: 'warn',
+    callback: async () => {
+      const newCode = Math.random().toString(36).slice(2, 8).toUpperCase();
+      await update(ref(db, `groups/${adminGroupId}`), { inviteCode: newCode });
+      adminGroupData.inviteCode = newCode;
+      document.getElementById('admin-invite-code').textContent = newCode;
+      showToast(`新邀請碼：${newCode} 🔄`);
+    }
+  });
+};
+
+// ─── 改名彈窗 ───
+window.openRenameModal = function() {
+  if (!isCurrentUserAdmin()) return showToast('只有群主可以修改群組名稱');
+  renameTarget = 'group';
+  document.getElementById('rename-title').textContent = '✏️ 修改群組名稱';
+  document.getElementById('rename-input').placeholder = '輸入新的群組名稱';
+  document.getElementById('rename-input').value = adminGroupData?.name || '';
+  document.getElementById('rename-overlay').classList.add('show');
+};
+
+window.closeRenameModal = function(e) {
+  if (!e || e.target === document.getElementById('rename-overlay'))
+    document.getElementById('rename-overlay').classList.remove('show');
+};
+
+window.executeRename = async function() {
+  const val = document.getElementById('rename-input').value.trim();
+  if (!val) return showToast('請輸入內容');
+  document.getElementById('rename-overlay').classList.remove('show');
+
+  if (renameTarget === 'group') {
+    await update(ref(db, `groups/${adminGroupId}`), { name: val });
+    // 同步更新所有成員的用戶資料
+    const membSnap = await get(ref(db, `groups/${adminGroupId}/members`));
+    if (membSnap.exists()) {
+      const promises = [];
+      membSnap.forEach(child => {
+        promises.push(update(ref(db, `users/${child.key}/groups/${adminGroupId}`), { name: val }));
+      });
+      await Promise.all(promises);
+    }
+    adminGroupData.name = val;
+    document.getElementById('admin-group-name').textContent = val;
+    document.getElementById('admin-info-name').textContent = val;
+    document.getElementById('gc-name').textContent = val;
+    await push(ref(db, `group-messages/${adminGroupId}`), {
+      text: `群組名稱已更改為「${val}」`,
+      sender: 'system', senderName: '系統', ts: Date.now()
+    });
+    showToast(`群組已改名為「${val}」 ✏️`);
+    loadGroups();
+  } else if (renameTarget === 'announcement') {
+    await push(ref(db, `group-messages/${adminGroupId}`), {
+      text: `📢 公告：${val}`,
+      sender: 'system', senderName: '管理員公告', ts: Date.now()
+    });
+    showToast('公告已發布 📢');
+  }
+};
+
+// ─── 確認對話框 ───
+function showConfirm({ icon, title, desc, okText, okClass, callback }) {
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-desc').textContent = desc;
+  const okBtn = document.getElementById('confirm-ok-btn');
+  okBtn.textContent = okText;
+  okBtn.className = `confirm-ok ${okClass}`;
+  confirmCallback = callback;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+
+window.closeConfirm = function() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  confirmCallback = null;
+};
+
+window.executeConfirm = async function() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  if (confirmCallback) {
+    await confirmCallback();
+    confirmCallback = null;
+  }
+};
+
+// ─── 權限判斷 ───
+function isCurrentUserAdmin() {
+  return adminGroupData?.members?.[currentUser?.uid]?.role === 'admin';
+}
+function isCurrentUserAdminOrMod() {
+  const role = adminGroupData?.members?.[currentUser?.uid]?.role;
+  return role === 'admin' || role === 'mod';
+}
+
+// sendGroupMsg 加入禁言判斷
+const _origSendGroupMsg = window.sendGroupMsg;
+window.sendGroupMsg = async function() {
+  if (!currentGroupId) return;
+  // 檢查全員禁言
+  const gSnap = await get(ref(db, `groups/${currentGroupId}/muteAll`));
+  if (gSnap.val() === true) {
+    const myRoleSnap = await get(ref(db, `groups/${currentGroupId}/members/${currentUser.uid}/role`));
+    const myRole = myRoleSnap.val();
+    if (myRole !== 'admin' && myRole !== 'mod') {
+      return showToast('目前群組全員禁言中，無法發送訊息 🔕');
+    }
+  }
+  await _origSendGroupMsg();
+};
+
+// ══════════════════════════════════════
+// 戰隊排行榜
+// ══════════════════════════════════════
+
+function loadTeamLeaderboard() {
+  get(ref(db, 'groups')).then(snap => {
+    const teams = [];
+    if (snap.exists()) {
+      snap.forEach(child => {
+        const g = child.val();
+        if (g.type === 'team') teams.push({ id: child.key, ...g });
+      });
+    }
+    teams.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+    const rankEmoji = ['🥇', '🥈', '🥉'];
+    const el = document.getElementById('team-leaderboard');
+    if (!el) return;
+
+    if (teams.length === 0) {
+      el.innerHTML = '<div style="text-align:center;padding:30px;color:var(--gray)"><div style="font-size:40px;margin-bottom:8px">⚔️</div>還沒有戰隊，快來建立第一支！</div>';
+      return;
+    }
+
+    el.innerHTML = teams.slice(0, 10).map((t, i) => `
+      <div class="team-lb-row">
+        <div class="tlb-rank">${rankEmoji[i] || i + 1}</div>
+        <div class="tlb-icon">⚔️</div>
+        <div class="tlb-info">
+          <div class="tlb-name">${t.name}</div>
+          <div class="tlb-members">${Object.keys(t.members || {}).length} 人</div>
+        </div>
+        <div class="tlb-score">${t.score || 0}</div>
+      </div>`).join('');
+
+    // 我的戰隊
+    const myTeam = teams.find(t => t.members && t.members[currentUser?.uid]);
+    const myTeamEl = document.getElementById('my-team-score');
+    if (myTeamEl) {
+      if (myTeam) {
+        const myRank = teams.indexOf(myTeam) + 1;
+        myTeamEl.innerHTML = `
+          <div class="team-score-card">
+            <div class="ts-title">我的戰隊</div>
+            <div style="font-size:20px;font-weight:900;color:white;margin:4px 0">${myTeam.name}</div>
+            <div class="ts-score">${myTeam.score || 0}</div>
+            <div class="ts-rank">目前排名 #${myRank} · 聊天+2分 健康任務+5分</div>
+          </div>`;
+      } else {
+        myTeamEl.innerHTML = '';
+      }
+    }
+  });
+}
+
+// goPage 更新：加入社群初始化
+const _origGoPage = window.goPage;
+window.goPage = function(name, btn) {
+  _origGoPage(name, btn);
+  if (name === 'social') initSocial();
+};
+
+// ─── 個人頁 ───
+function refreshProfile() {
+  document.getElementById('profile-name').textContent = userData.name || '我的帳號';
+  document.getElementById('ps-score').textContent = userData.score || 0;
+  document.getElementById('ps-days').textContent = userData.days || 1;
+  document.getElementById('ps-tasks').textContent = userData.tasks || 0;
+  const score = userData.score || 0;
+  const levels = ['初階健康達人','進階健康達人','資深健康達人','健康金牌長輩','傳奇健康大師'];
+  const lvl = Math.min(Math.floor(score/300), 4);
+  document.getElementById('profile-level').textContent = `⭐ ${levels[lvl]} · ${score} 積分`;
+}
+
+</script>
+</body>
+</html>

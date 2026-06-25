@@ -1,0 +1,1334 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>陪你 PeiNi · 後台管理</title>
+<style>
+:root {
+  --orange: #FF6B35;
+  --gold: #FFB830;
+  --cream: #FFF8F0;
+  --deep: #3D1F0A;
+  --mid: #7A4520;
+  --green: #4CAF82;
+  --blue: #4A90D9;
+  --purple: #9B6DD6;
+  --red: #E53030;
+  --gray: #8B7355;
+  --sidebar: #1E0D00;
+  --sidebar-hover: #3D1F0A;
+  --card-shadow: 0 2px 16px rgba(61,31,10,0.10);
+  --font: 'Noto Sans TC', system-ui, sans-serif;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family: var(--font); background: #F5EDE4; color: var(--deep); min-height: 100vh; }
+
+/* ── 登入頁 ── */
+#login-screen {
+  min-height: 100vh;
+  background: linear-gradient(135deg, var(--deep) 0%, var(--mid) 100%);
+  display: flex; align-items: center; justify-content: center; padding: 24px;
+}
+.login-box {
+  background: white; border-radius: 28px; padding: 48px 40px;
+  width: 100%; max-width: 420px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+.login-logo { font-size: 56px; text-align: center; margin-bottom: 8px; }
+.login-title { font-size: 26px; font-weight: 900; color: var(--deep); text-align: center; }
+.login-sub { font-size: 14px; color: var(--gray); text-align: center; margin-bottom: 32px; }
+.login-field { margin-bottom: 16px; }
+.login-field label { font-size: 14px; font-weight: 700; color: var(--mid); display: block; margin-bottom: 6px; }
+.login-field input {
+  width: 100%; padding: 14px 16px; border: 2px solid #E0D0C0; border-radius: 14px;
+  font-size: 16px; font-family: var(--font); outline: none; transition: border-color .2s;
+}
+.login-field input:focus { border-color: var(--orange); }
+.login-btn {
+  width: 100%; padding: 16px; background: linear-gradient(135deg, var(--orange), var(--gold));
+  color: white; border: none; border-radius: 16px; font-size: 18px; font-weight: 700;
+  cursor: pointer; font-family: var(--font); margin-top: 8px; transition: opacity .2s;
+}
+.login-btn:hover { opacity: .92; }
+.login-err { color: var(--red); font-size: 14px; text-align: center; margin-top: 10px; display: none; }
+
+/* ── 主後台佈局 ── */
+#admin-app { display: none; min-height: 100vh; }
+.layout { display: flex; min-height: 100vh; }
+
+/* 側邊欄 */
+.sidebar {
+  width: 240px; flex-shrink: 0;
+  background: var(--sidebar);
+  display: flex; flex-direction: column;
+  position: fixed; top: 0; left: 0; bottom: 0;
+  z-index: 100;
+}
+.sidebar-logo {
+  padding: 28px 24px 20px;
+  border-bottom: 1px solid rgba(255,255,255,.08);
+}
+.sidebar-logo-icon { font-size: 32px; }
+.sidebar-logo-name { font-size: 18px; font-weight: 900; color: var(--gold); margin-top: 4px; }
+.sidebar-logo-sub { font-size: 11px; color: rgba(255,255,255,.4); margin-top: 2px; letter-spacing: 2px; }
+
+.sidebar-nav { padding: 16px 12px; flex: 1; overflow-y: auto; }
+.nav-group-label {
+  font-size: 10px; font-weight: 700; letter-spacing: 3px;
+  color: rgba(255,255,255,.3); padding: 12px 12px 6px; text-transform: uppercase;
+}
+.nav-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 14px; cursor: pointer;
+  color: rgba(255,255,255,.65); font-size: 14px; font-weight: 600;
+  transition: all .2s; margin-bottom: 2px; border: none; background: none;
+  font-family: var(--font); width: 100%; text-align: left;
+}
+.nav-link:hover { background: var(--sidebar-hover); color: white; }
+.nav-link.active { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+.nav-link .nav-icon { font-size: 18px; width: 24px; text-align: center; }
+.nav-badge {
+  margin-left: auto; background: var(--red); color: white;
+  border-radius: 20px; padding: 2px 8px; font-size: 11px; font-weight: 700;
+}
+
+.sidebar-footer {
+  padding: 16px 12px; border-top: 1px solid rgba(255,255,255,.08);
+}
+.admin-user {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px; border-radius: 14px; color: rgba(255,255,255,.7);
+}
+.admin-user-avatar { font-size: 28px; }
+.admin-user-info { flex: 1; }
+.admin-user-name { font-size: 14px; font-weight: 700; color: white; }
+.admin-user-role { font-size: 11px; color: rgba(255,255,255,.5); }
+.logout-btn {
+  background: rgba(255,255,255,.08); border: none; color: rgba(255,255,255,.6);
+  padding: 8px; border-radius: 10px; cursor: pointer; font-size: 16px; transition: .2s;
+}
+.logout-btn:hover { background: rgba(255,0,0,.2); color: white; }
+
+/* 主內容區 */
+.main-content { margin-left: 240px; flex: 1; display: flex; flex-direction: column; }
+
+.top-bar {
+  background: white; padding: 18px 32px;
+  display: flex; align-items: center; justify-content: space-between;
+  border-bottom: 1px solid #EDE0D4; position: sticky; top: 0; z-index: 50;
+  box-shadow: 0 2px 12px rgba(61,31,10,.06);
+}
+.page-title { font-size: 22px; font-weight: 900; color: var(--deep); }
+.top-actions { display: flex; gap: 10px; align-items: center; }
+.refresh-btn {
+  padding: 8px 16px; border-radius: 12px; border: 2px solid #E0D0C0;
+  background: white; color: var(--mid); font-family: var(--font); font-size: 14px;
+  font-weight: 700; cursor: pointer; transition: .15s;
+}
+.refresh-btn:hover { border-color: var(--orange); color: var(--orange); }
+.last-updated { font-size: 12px; color: var(--gray); }
+
+.content-area { padding: 28px 32px; flex: 1; }
+
+/* 面板切換 */
+.panel { display: none; }
+.panel.active { display: block; }
+
+/* 統計卡片 */
+.stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
+.stat-card {
+  background: white; border-radius: 20px; padding: 22px 20px;
+  box-shadow: var(--card-shadow); position: relative; overflow: hidden;
+}
+.stat-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; border-radius: 20px 20px 0 0;
+}
+.stat-card.orange::before { background: linear-gradient(90deg, var(--orange), var(--gold)); }
+.stat-card.green::before  { background: var(--green); }
+.stat-card.blue::before   { background: var(--blue); }
+.stat-card.purple::before { background: var(--purple); }
+.stat-card.red::before    { background: var(--red); }
+
+.stat-icon { font-size: 32px; margin-bottom: 10px; }
+.stat-value { font-size: 36px; font-weight: 900; color: var(--deep); line-height: 1; }
+.stat-label { font-size: 13px; color: var(--gray); margin-top: 4px; font-weight: 600; }
+.stat-change { font-size: 12px; margin-top: 6px; font-weight: 700; }
+.stat-change.up   { color: var(--green); }
+.stat-change.down { color: var(--red); }
+
+/* 通用卡片 */
+.panel-card {
+  background: white; border-radius: 20px; box-shadow: var(--card-shadow);
+  margin-bottom: 20px; overflow: hidden;
+}
+.card-header {
+  padding: 18px 24px; border-bottom: 1px solid #F0E4D8;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.card-title { font-size: 16px; font-weight: 900; color: var(--deep); }
+.card-action {
+  padding: 7px 16px; border-radius: 12px; border: none;
+  font-family: var(--font); font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: .15s;
+}
+.card-action.primary { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+.card-action.outline { background: white; border: 2px solid #E0D0C0; color: var(--mid); }
+.card-action.danger  { background: #FFE8E8; color: var(--red); }
+
+/* 搜尋欄 */
+.search-bar {
+  padding: 16px 24px; border-bottom: 1px solid #F0E4D8;
+  display: flex; gap: 10px;
+}
+.search-input {
+  flex: 1; padding: 10px 16px; border: 2px solid #E0D0C0; border-radius: 12px;
+  font-family: var(--font); font-size: 14px; outline: none; transition: .2s;
+}
+.search-input:focus { border-color: var(--orange); }
+.search-btn {
+  padding: 10px 20px; border-radius: 12px; border: none;
+  background: var(--orange); color: white;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.filter-select {
+  padding: 10px 14px; border: 2px solid #E0D0C0; border-radius: 12px;
+  font-family: var(--font); font-size: 14px; outline: none; color: var(--deep);
+  background: white;
+}
+
+/* 表格 */
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th {
+  padding: 12px 16px; text-align: left; font-size: 12px; font-weight: 700;
+  color: var(--gray); letter-spacing: 1px; text-transform: uppercase;
+  background: #FBF5EE; border-bottom: 1px solid #F0E4D8;
+}
+.data-table td {
+  padding: 14px 16px; border-bottom: 1px solid #FAF0E8;
+  font-size: 14px; color: var(--deep); vertical-align: middle;
+}
+.data-table tr:last-child td { border-bottom: none; }
+.data-table tr:hover td { background: #FFF8F4; }
+
+.user-cell { display: flex; align-items: center; gap: 10px; }
+.user-avatar-sm { font-size: 28px; }
+.user-name-sm { font-weight: 700; font-size: 14px; }
+.user-email-sm { font-size: 12px; color: var(--gray); }
+
+.status-badge {
+  display: inline-flex; align-items: center; gap: 4px;
+  padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 700;
+}
+.status-active  { background: #D4F5E8; color: #1A6B46; }
+.status-inactive{ background: #F0E8E0; color: var(--gray); }
+.status-banned  { background: #FFE8E8; color: var(--red); }
+.status-admin   { background: linear-gradient(135deg, var(--orange), var(--gold)); color: white; }
+
+.table-actions { display: flex; gap: 6px; }
+.tbl-btn {
+  padding: 6px 12px; border-radius: 10px; border: none; font-family: var(--font);
+  font-size: 12px; font-weight: 700; cursor: pointer; transition: .15s; white-space: nowrap;
+}
+.tbl-btn:active { transform: scale(.96); }
+.tbl-view   { background: #E8F4FF; color: #2060A0; }
+.tbl-ban    { background: #FFE8E8; color: var(--red); }
+.tbl-unban  { background: #D4F5E8; color: #1A6B46; }
+.tbl-delete { background: #3D1F0A; color: white; }
+.tbl-promote{ background: linear-gradient(135deg,var(--orange),var(--gold)); color: white; }
+
+/* 空狀態 */
+.empty-state { text-align: center; padding: 60px 20px; color: var(--gray); }
+.empty-state .empty-icon { font-size: 52px; margin-bottom: 12px; }
+.empty-state p { font-size: 15px; }
+
+/* 圖表區 */
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+.mini-chart-wrap { padding: 20px 24px; }
+.mini-chart-title { font-size: 14px; font-weight: 700; color: var(--mid); margin-bottom: 14px; }
+.bar-chart { display: flex; align-items: flex-end; gap: 6px; height: 80px; }
+.bar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.bar {
+  width: 100%; border-radius: 6px 6px 0 0;
+  background: linear-gradient(180deg, var(--orange), var(--gold));
+  transition: height .5s ease; min-height: 4px;
+}
+.bar-label { font-size: 10px; color: var(--gray); text-align: center; }
+.bar-val   { font-size: 10px; font-weight: 700; color: var(--orange); }
+
+/* 公告 */
+.announce-form { padding: 24px; }
+.announce-textarea {
+  width: 100%; min-height: 100px; padding: 14px 16px;
+  border: 2px solid #E0D0C0; border-radius: 16px;
+  font-family: var(--font); font-size: 16px; outline: none; resize: vertical;
+  transition: .2s; margin-bottom: 12px;
+}
+.announce-textarea:focus { border-color: var(--orange); }
+.announce-type-row { display: flex; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+.announce-type {
+  padding: 8px 16px; border-radius: 12px; border: 2px solid #E0D0C0;
+  background: white; font-family: var(--font); font-size: 13px; font-weight: 700;
+  cursor: pointer; color: var(--mid); transition: .2s;
+}
+.announce-type.selected { border-color: var(--orange); background: #FFF0E8; color: var(--orange); }
+.announce-history { padding: 0 24px 24px; }
+.ah-row {
+  padding: 14px 0; border-bottom: 1px solid #F0E8E0;
+  display: flex; gap: 12px; align-items: flex-start;
+}
+.ah-row:last-child { border-bottom: none; }
+.ah-icon { font-size: 22px; flex-shrink: 0; margin-top: 2px; }
+.ah-content { flex: 1; }
+.ah-text { font-size: 15px; color: var(--deep); line-height: 1.5; }
+.ah-meta { font-size: 12px; color: var(--gray); margin-top: 4px; }
+
+/* 詳情側滑 */
+.detail-drawer {
+  position: fixed; top: 0; right: -480px; bottom: 0;
+  width: 480px; background: white;
+  box-shadow: -8px 0 40px rgba(61,31,10,.15);
+  z-index: 200; transition: right .3s ease;
+  display: flex; flex-direction: column;
+}
+.detail-drawer.open { right: 0; }
+.drawer-overlay {
+  position: fixed; inset: 0; background: rgba(61,31,10,.4);
+  z-index: 190; display: none;
+}
+.drawer-overlay.show { display: block; }
+.drawer-header {
+  background: linear-gradient(135deg, var(--orange), var(--gold));
+  padding: 28px 24px; color: white; flex-shrink: 0;
+  display: flex; align-items: center; gap: 16px;
+}
+.drawer-close { background: none; border: none; color: white; font-size: 24px; cursor: pointer; }
+.drawer-avatar { font-size: 52px; }
+.drawer-user-info { flex: 1; }
+.drawer-user-name { font-size: 22px; font-weight: 900; }
+.drawer-user-sub { font-size: 13px; opacity: .85; margin-top: 3px; }
+.drawer-body { flex: 1; overflow-y: auto; padding: 24px; }
+.drawer-section { margin-bottom: 24px; }
+.drawer-section-title {
+  font-size: 13px; font-weight: 700; letter-spacing: 2px;
+  color: var(--orange); text-transform: uppercase; margin-bottom: 12px;
+}
+.detail-row {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 10px 0; border-bottom: 1px solid #F0E8E0;
+}
+.detail-row:last-child { border-bottom: none; }
+.detail-label { font-size: 14px; color: var(--gray); font-weight: 600; }
+.detail-value { font-size: 14px; font-weight: 700; color: var(--deep); }
+.drawer-actions { padding: 16px 24px; border-top: 1px solid #F0E4D8; display: flex; gap: 10px; flex-shrink: 0; }
+.drawer-action-btn {
+  flex: 1; padding: 12px; border-radius: 14px; border: none;
+  font-family: var(--font); font-size: 14px; font-weight: 700; cursor: pointer;
+}
+.da-warn   { background: #FFE8E8; color: var(--red); }
+.da-ok     { background: #D4F5E8; color: #1A6B46; }
+.da-danger { background: var(--red); color: white; }
+
+/* Toast */
+.admin-toast {
+  position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%);
+  background: var(--deep); color: white; padding: 12px 24px; border-radius: 40px;
+  font-size: 14px; font-weight: 600; z-index: 999; opacity: 0; transition: opacity .3s;
+  white-space: nowrap; pointer-events: none;
+}
+.admin-toast.show { opacity: 1; }
+
+/* 確認框 */
+.admin-confirm {
+  position: fixed; inset: 0; background: rgba(61,31,10,.55);
+  z-index: 500; display: none; align-items: center; justify-content: center; padding: 24px;
+}
+.admin-confirm.show { display: flex; }
+.admin-confirm-box {
+  background: white; border-radius: 24px; padding: 32px 28px;
+  max-width: 380px; width: 100%; text-align: center;
+  box-shadow: 0 20px 60px rgba(61,31,10,.3);
+  animation: scaleIn .2s ease;
+}
+@keyframes scaleIn { from{transform:scale(.9);opacity:0} to{transform:scale(1);opacity:1} }
+.acb-icon  { font-size: 48px; margin-bottom: 10px; }
+.acb-title { font-size: 20px; font-weight: 900; margin-bottom: 8px; }
+.acb-desc  { font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 24px; }
+.acb-btns  { display: flex; gap: 12px; }
+.acb-cancel { flex:1; padding:13px; border-radius:13px; border:2px solid #E0D0C0; background:white; font-family:var(--font); font-size:15px; font-weight:700; color:var(--gray); cursor:pointer; }
+.acb-ok     { flex:1; padding:13px; border-radius:13px; border:none; background:var(--red); color:white; font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; }
+.acb-ok.warn{ background:var(--orange); }
+
+/* 響應式 */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+  .charts-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+  .sidebar { width: 60px; }
+  .sidebar-logo-name, .sidebar-logo-sub, .nav-link span:not(.nav-icon), .nav-badge, .admin-user-info { display: none; }
+  .main-content { margin-left: 60px; }
+  .stats-grid { grid-template-columns: 1fr 1fr; }
+  .detail-drawer { width: 100%; right: -100%; }
+}
+</style>
+</head>
+<body>
+
+<!-- ═══════════════ 登入頁 ═══════════════ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-logo">🛡️</div>
+    <div class="login-title">陪你後台管理</div>
+    <div class="login-sub">PeiNi Admin Dashboard</div>
+    <div class="login-field">
+      <label>管理員信箱</label>
+      <input type="email" id="admin-email" placeholder="admin@peini.com">
+    </div>
+    <div class="login-field">
+      <label>密碼</label>
+      <input type="password" id="admin-pwd" placeholder="輸入密碼"
+        onkeydown="if(event.key==='Enter')adminLogin()">
+    </div>
+    <button class="login-btn" onclick="adminLogin()">登入後台 →</button>
+    <div class="login-err" id="login-err">帳號或密碼錯誤，或無後台權限</div>
+  </div>
+</div>
+
+<!-- ═══════════════ 主後台 ═══════════════ -->
+<div id="admin-app">
+  <div class="layout">
+
+    <!-- 側邊欄 -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">
+        <div class="sidebar-logo-icon">🌟</div>
+        <div class="sidebar-logo-name">陪你 PeiNi</div>
+        <div class="sidebar-logo-sub">ADMIN PANEL</div>
+      </div>
+      <nav class="sidebar-nav">
+        <div class="nav-group-label">主要</div>
+        <button class="nav-link active" onclick="goPanel('dashboard', this)">
+          <span class="nav-icon">📊</span><span>儀表板</span>
+        </button>
+        <button class="nav-link" onclick="goPanel('users', this)">
+          <span class="nav-icon">👥</span><span>用戶管理</span>
+        </button>
+        <button class="nav-link" onclick="goPanel('groups', this)">
+          <span class="nav-icon">🏠</span><span>群組管理</span>
+        </button>
+
+        <div class="nav-group-label">工具</div>
+        <button class="nav-link" onclick="goPanel('announce', this)">
+          <span class="nav-icon">📢</span><span>系統公告</span>
+        </button>
+        <button class="nav-link" onclick="goPanel('health', this)">
+          <span class="nav-icon">❤️</span><span>健康數據</span>
+        </button>
+        <button class="nav-link" onclick="goPanel('reports', this)">
+          <span class="nav-icon">🚨</span><span>檢舉審核</span>
+          <span class="nav-badge" id="reports-badge" style="display:none">!</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <div class="admin-user">
+          <div class="admin-user-avatar">🛡️</div>
+          <div class="admin-user-info">
+            <div class="admin-user-name" id="admin-display-name">管理員</div>
+            <div class="admin-user-role">Super Admin</div>
+          </div>
+          <button class="logout-btn" onclick="adminLogout()" title="登出">⏻</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 主內容 -->
+    <main class="main-content">
+      <div class="top-bar">
+        <div class="page-title" id="top-title">📊 儀表板</div>
+        <div class="top-actions">
+          <span class="last-updated" id="last-updated">—</span>
+          <button class="refresh-btn" onclick="refreshCurrent()">🔄 重新整理</button>
+        </div>
+      </div>
+      <div class="content-area">
+
+        <!-- ── 儀表板 ── -->
+        <div id="panel-dashboard" class="panel active">
+          <div class="stats-grid">
+            <div class="stat-card orange">
+              <div class="stat-icon">👥</div>
+              <div class="stat-value" id="stat-total-users">—</div>
+              <div class="stat-label">總用戶數</div>
+              <div class="stat-change up" id="stat-users-change">載入中…</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon">🔥</div>
+              <div class="stat-value" id="stat-active">—</div>
+              <div class="stat-label">近7日活躍</div>
+              <div class="stat-change up" id="stat-active-change">活躍率計算中</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon">🏠</div>
+              <div class="stat-value" id="stat-groups">—</div>
+              <div class="stat-label">群組總數</div>
+              <div class="stat-change up" id="stat-groups-change">載入中…</div>
+            </div>
+            <div class="stat-card purple">
+              <div class="stat-icon">💬</div>
+              <div class="stat-value" id="stat-messages">—</div>
+              <div class="stat-label">今日訊息數</div>
+              <div class="stat-change up">即時統計</div>
+            </div>
+          </div>
+
+          <div class="charts-row">
+            <div class="panel-card">
+              <div class="card-header"><div class="card-title">📈 近7日新增用戶</div></div>
+              <div class="mini-chart-wrap">
+                <div class="bar-chart" id="user-bar-chart"></div>
+              </div>
+            </div>
+            <div class="panel-card">
+              <div class="card-header"><div class="card-title">🏆 積分排行 Top 5</div></div>
+              <div style="padding: 8px 0" id="top-score-list"></div>
+            </div>
+          </div>
+
+          <div class="panel-card">
+            <div class="card-header">
+              <div class="card-title">👤 最新加入用戶</div>
+              <button class="card-action outline" onclick="goPanel('users', document.querySelector('[onclick*=users]'))">查看全部</button>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table" id="new-users-table">
+                <thead><tr>
+                  <th>用戶</th><th>加入時間</th><th>積分</th><th>狀態</th><th>操作</th>
+                </tr></thead>
+                <tbody id="new-users-body">
+                  <tr><td colspan="5" class="empty-state"><div class="empty-icon">⏳</div><p>載入中…</p></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 用戶管理 ── -->
+        <div id="panel-users" class="panel">
+          <div class="panel-card">
+            <div class="card-header">
+              <div class="card-title">全部用戶</div>
+              <div style="display:flex;gap:8px">
+                <button class="card-action primary" onclick="exportUsers()">⬇ 匯出 CSV</button>
+              </div>
+            </div>
+            <div class="search-bar">
+              <input class="search-input" id="user-search" placeholder="搜尋名稱或信箱…" oninput="filterUsers()">
+              <select class="filter-select" id="user-filter" onchange="filterUsers()">
+                <option value="all">全部狀態</option>
+                <option value="active">正常</option>
+                <option value="banned">已封禁</option>
+              </select>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table">
+                <thead><tr>
+                  <th>用戶</th><th>代號</th><th>加入日期</th><th>積分</th><th>連線天數</th><th>狀態</th><th>操作</th>
+                </tr></thead>
+                <tbody id="users-body">
+                  <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">⏳</div><p>載入中…</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div id="users-pagination" style="padding:16px 24px;text-align:center;color:var(--gray);font-size:13px"></div>
+          </div>
+        </div>
+
+        <!-- ── 群組管理 ── -->
+        <div id="panel-groups" class="panel">
+          <div class="panel-card">
+            <div class="card-header">
+              <div class="card-title">所有群組</div>
+            </div>
+            <div class="search-bar">
+              <input class="search-input" id="group-search" placeholder="搜尋群組名稱…" oninput="filterGroups()">
+              <select class="filter-select" id="group-filter" onchange="filterGroups()">
+                <option value="all">全部類型</option>
+                <option value="family">家人群</option>
+                <option value="friends">好友群</option>
+                <option value="team">遊戲戰隊</option>
+              </select>
+            </div>
+            <div style="overflow-x:auto">
+              <table class="data-table">
+                <thead><tr>
+                  <th>群組</th><th>類型</th><th>成員</th><th>邀請碼</th><th>建立時間</th><th>積分</th><th>操作</th>
+                </tr></thead>
+                <tbody id="groups-body">
+                  <tr><td colspan="7"><div class="empty-state"><div class="empty-icon">⏳</div><p>載入中…</p></div></td></tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 系統公告 ── -->
+        <div id="panel-announce" class="panel">
+          <div class="panel-card">
+            <div class="card-header"><div class="card-title">📢 發送系統公告</div></div>
+            <div class="announce-form">
+              <label style="font-size:14px;font-weight:700;color:var(--mid);display:block;margin-bottom:8px">公告類型</label>
+              <div class="announce-type-row">
+                <button class="announce-type selected" onclick="selectAnnounceType(this,'info')">ℹ️ 一般通知</button>
+                <button class="announce-type" onclick="selectAnnounceType(this,'warn')">⚠️ 重要警告</button>
+                <button class="announce-type" onclick="selectAnnounceType(this,'event')">🎉 活動公告</button>
+                <button class="announce-type" onclick="selectAnnounceType(this,'maintain')">🔧 系統維護</button>
+              </div>
+              <label style="font-size:14px;font-weight:700;color:var(--mid);display:block;margin-bottom:8px">公告內容</label>
+              <textarea class="announce-textarea" id="announce-text" placeholder="輸入要推送給所有用戶的公告內容…"></textarea>
+              <div style="display:flex;gap:10px">
+                <button class="card-action primary" style="padding:12px 24px;font-size:15px" onclick="sendAnnouncement()">📢 立即發送</button>
+                <button class="card-action outline" style="padding:12px 24px;font-size:15px" onclick="previewAnnouncement()">👁 預覽</button>
+              </div>
+            </div>
+          </div>
+          <div class="panel-card">
+            <div class="card-header"><div class="card-title">📋 歷史公告</div></div>
+            <div class="announce-history" id="announce-history">
+              <div class="empty-state"><div class="empty-icon">📭</div><p>還沒有發送過公告</p></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── 健康數據 ── -->
+        <div id="panel-health" class="panel">
+          <div class="stats-grid" style="grid-template-columns:repeat(3,1fr)">
+            <div class="stat-card orange">
+              <div class="stat-icon">❤️</div>
+              <div class="stat-value" id="health-bp-count">—</div>
+              <div class="stat-label">血壓記錄總筆數</div>
+            </div>
+            <div class="stat-card green">
+              <div class="stat-icon">🩸</div>
+              <div class="stat-value" id="health-bs-count">—</div>
+              <div class="stat-label">血糖記錄總筆數</div>
+            </div>
+            <div class="stat-card blue">
+              <div class="stat-icon">💊</div>
+              <div class="stat-value" id="health-med-count">—</div>
+              <div class="stat-label">用藥打卡總次數</div>
+            </div>
+          </div>
+          <div class="panel-card">
+            <div class="card-header"><div class="card-title">📊 血壓異常統計（收縮壓 > 140）</div></div>
+            <div id="bp-abnormal-list" style="padding:20px">
+              <div class="empty-state"><div class="empty-icon">⏳</div><p>載入中…</p></div>
+            </div>
+          </div>
+          <div class="panel-card">
+            <div class="card-header">
+              <div class="card-title">⚠️ 任務完成率</div>
+            </div>
+            <div id="task-stats" style="padding:20px"></div>
+          </div>
+        </div>
+
+        <!-- ── 檢舉審核 ── -->
+        <div id="panel-reports" class="panel">
+          <div class="panel-card">
+            <div class="card-header"><div class="card-title">🚨 用戶檢舉列表</div></div>
+            <div id="reports-list" style="padding:20px">
+              <div class="empty-state">
+                <div class="empty-icon">✅</div>
+                <p>目前沒有待審核的檢舉</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div><!-- /content-area -->
+    </main>
+  </div>
+</div>
+
+<!-- 用戶詳情側滑 -->
+<div class="drawer-overlay" id="drawer-overlay" onclick="closeDrawer()"></div>
+<div class="detail-drawer" id="detail-drawer">
+  <div class="drawer-header">
+    <button class="drawer-close" onclick="closeDrawer()">✕</button>
+    <div class="drawer-avatar" id="drawer-avatar">👤</div>
+    <div class="drawer-user-info">
+      <div class="drawer-user-name" id="drawer-name">—</div>
+      <div class="drawer-user-sub" id="drawer-sub">—</div>
+    </div>
+  </div>
+  <div class="drawer-body">
+    <div class="drawer-section">
+      <div class="drawer-section-title">基本資料</div>
+      <div id="drawer-basic"></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">健康記錄</div>
+      <div id="drawer-health"></div>
+    </div>
+    <div class="drawer-section">
+      <div class="drawer-section-title">社群活動</div>
+      <div id="drawer-social"></div>
+    </div>
+  </div>
+  <div class="drawer-actions" id="drawer-actions"></div>
+</div>
+
+<!-- 確認框 -->
+<div class="admin-confirm" id="admin-confirm">
+  <div class="admin-confirm-box">
+    <div class="acb-icon" id="acb-icon">⚠️</div>
+    <div class="acb-title" id="acb-title">確認操作</div>
+    <div class="acb-desc" id="acb-desc">確定要執行此操作嗎？</div>
+    <div class="acb-btns">
+      <button class="acb-cancel" onclick="closeAdminConfirm()">取消</button>
+      <button class="acb-ok" id="acb-ok" onclick="runAdminConfirm()">確定</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="admin-toast" id="admin-toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getDatabase, ref, get, set, push, update, onValue, remove
+} from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+// ★ 填入你的 Firebase 設定 ★
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// ─── 狀態 ───
+let allUsers = [];
+let allGroups = [];
+let currentPanel = 'dashboard';
+let adminUid = null;
+let announceType = 'info';
+let adminConfirmCb = null;
+let drawerUid = null;
+
+// ─── Toast ───
+window.adminToast = function(msg) {
+  const t = document.getElementById('admin-toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+};
+
+// ─── 登入 ───
+window.adminLogin = async function() {
+  const email = document.getElementById('admin-email').value.trim();
+  const pwd = document.getElementById('admin-pwd').value;
+  const err = document.getElementById('login-err');
+  err.style.display = 'none';
+  try {
+    const cred = await signInWithEmailAndPassword(auth, email, pwd);
+    // 驗證是否在 admins 節點
+    const snap = await get(ref(db, `admins/${cred.user.uid}`));
+    if (!snap.exists()) {
+      await signOut(auth);
+      err.style.display = 'block';
+      return;
+    }
+    adminUid = cred.user.uid;
+  } catch(e) {
+    err.style.display = 'block';
+  }
+};
+
+window.adminLogout = async function() {
+  await signOut(auth);
+};
+
+onAuthStateChanged(auth, async user => {
+  if (user) {
+    const snap = await get(ref(db, `admins/${user.uid}`));
+    if (!snap.exists()) { await signOut(auth); return; }
+    adminUid = user.uid;
+    document.getElementById('login-screen').style.display = 'none';
+    document.getElementById('admin-app').style.display = 'block';
+    document.getElementById('admin-display-name').textContent = user.email?.split('@')[0] || '管理員';
+    loadDashboard();
+  } else {
+    document.getElementById('login-screen').style.display = 'flex';
+    document.getElementById('admin-app').style.display = 'none';
+  }
+});
+
+// ─── 面板切換 ───
+window.goPanel = function(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-link').forEach(l => l.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  if (btn) btn.classList.add('active');
+  currentPanel = name;
+  const titles = {
+    dashboard:'📊 儀表板', users:'👥 用戶管理', groups:'🏠 群組管理',
+    announce:'📢 系統公告', health:'❤️ 健康數據', reports:'🚨 檢舉審核'
+  };
+  document.getElementById('top-title').textContent = titles[name] || name;
+  updateLastUpdated();
+
+  if (name === 'users')    loadUsers();
+  if (name === 'groups')   loadGroups();
+  if (name === 'health')   loadHealthStats();
+  if (name === 'announce') loadAnnounceHistory();
+  if (name === 'reports')  loadReports();
+};
+
+window.refreshCurrent = function() { goPanel(currentPanel, null); };
+
+function updateLastUpdated() {
+  document.getElementById('last-updated').textContent =
+    '更新：' + new Date().toLocaleTimeString('zh-TW');
+}
+
+// ══════════════════════
+// 儀表板
+// ══════════════════════
+async function loadDashboard() {
+  updateLastUpdated();
+  const usersSnap = await get(ref(db, 'users'));
+  const groupsSnap = await get(ref(db, 'groups'));
+
+  let total = 0, active7 = 0;
+  const now = Date.now();
+  const week = 7 * 24 * 60 * 60 * 1000;
+  const dayBuckets = {};
+  const scoreList = [];
+
+  if (usersSnap.exists()) {
+    usersSnap.forEach(child => {
+      total++;
+      const u = child.val();
+      const created = u.createdAt || 0;
+      if (now - created < week) active7++;
+      // 日期分桶（近7天）
+      const day = new Date(created).toLocaleDateString('zh-TW', {month:'numeric',day:'numeric'});
+      dayBuckets[day] = (dayBuckets[day] || 0) + 1;
+      if (u.score) scoreList.push({ name: u.name || '用戶', score: u.score });
+    });
+  }
+
+  let groupCount = 0;
+  if (groupsSnap.exists()) groupsSnap.forEach(() => groupCount++);
+
+  document.getElementById('stat-total-users').textContent = total;
+  document.getElementById('stat-active').textContent = active7;
+  document.getElementById('stat-groups').textContent = groupCount;
+  document.getElementById('stat-users-change').textContent = `共 ${total} 位用戶`;
+  document.getElementById('stat-active-change').textContent =
+    total ? `活躍率 ${Math.round(active7/total*100)}%` : '';
+
+  // 訊息數（今日）
+  let msgCount = 0;
+  const today = new Date().toDateString();
+  if (groupsSnap.exists()) {
+    const gids = [];
+    groupsSnap.forEach(c => gids.push(c.key));
+    for (const gid of gids.slice(0, 10)) {
+      const ms = await get(ref(db, `group-messages/${gid}`));
+      if (ms.exists()) ms.forEach(m => {
+        if (new Date(m.val().ts).toDateString() === today) msgCount++;
+      });
+    }
+  }
+  document.getElementById('stat-messages').textContent = msgCount;
+
+  // 柱狀圖
+  const days = Object.entries(dayBuckets).slice(-7);
+  const maxV = Math.max(...days.map(d => d[1]), 1);
+  document.getElementById('user-bar-chart').innerHTML = days.map(([day, val]) =>
+    `<div class="bar-col">
+      <div class="bar-val">${val}</div>
+      <div class="bar" style="height:${Math.round(val/maxV*70)}px"></div>
+      <div class="bar-label">${day}</div>
+    </div>`
+  ).join('') || '<div style="color:var(--gray);padding:20px">暫無數據</div>';
+
+  // 積分排行
+  scoreList.sort((a, b) => b.score - a.score);
+  const rankEmoji = ['🥇','🥈','🥉','4️⃣','5️⃣'];
+  document.getElementById('top-score-list').innerHTML = scoreList.slice(0, 5).map((u, i) =>
+    `<div style="display:flex;align-items:center;gap:12px;padding:10px 24px;border-bottom:1px solid #F0E8E0">
+      <div style="font-size:22px;width:28px;text-align:center">${rankEmoji[i]}</div>
+      <div style="flex:1;font-weight:700">${u.name}</div>
+      <div style="font-size:16px;font-weight:900;color:var(--orange)">${u.score}</div>
+    </div>`
+  ).join('') || '<div class="empty-state"><p>暫無積分數據</p></div>';
+
+  // 最新用戶表格
+  if (usersSnap.exists()) {
+    const users = [];
+    usersSnap.forEach(child => users.push({ uid: child.key, ...child.val() }));
+    users.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    document.getElementById('new-users-body').innerHTML = users.slice(0, 8).map(u =>
+      `<tr>
+        <td><div class="user-cell">
+          <div class="user-avatar-sm">👤</div>
+          <div><div class="user-name-sm">${u.name || '—'}</div></div>
+        </div></td>
+        <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-TW') : '—'}</td>
+        <td>${u.score || 0}</td>
+        <td><span class="status-badge ${u.banned ? 'status-banned' : 'status-active'}">${u.banned ? '已封禁' : '正常'}</span></td>
+        <td><div class="table-actions">
+          <button class="tbl-btn tbl-view" onclick="openUserDrawer('${u.uid}')">詳情</button>
+        </div></td>
+      </tr>`
+    ).join('');
+  }
+}
+
+// ══════════════════════
+// 用戶管理
+// ══════════════════════
+async function loadUsers() {
+  const snap = await get(ref(db, 'users'));
+  allUsers = [];
+  if (snap.exists()) snap.forEach(child => allUsers.push({ uid: child.key, ...child.val() }));
+  allUsers.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  renderUsers(allUsers);
+  document.getElementById('users-pagination').textContent = `共 ${allUsers.length} 位用戶`;
+}
+
+window.filterUsers = function() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  const f = document.getElementById('user-filter').value;
+  let list = allUsers.filter(u => {
+    const match = !q || (u.name||'').toLowerCase().includes(q) || (u.email||'').toLowerCase().includes(q);
+    const status = f === 'all' || (f === 'banned' && u.banned) || (f === 'active' && !u.banned);
+    return match && status;
+  });
+  renderUsers(list);
+};
+
+function renderUsers(users) {
+  document.getElementById('users-body').innerHTML = users.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔍</div><p>找不到符合條件的用戶</p></div></td></tr>`
+    : users.map(u => `
+    <tr>
+      <td><div class="user-cell">
+        <div class="user-avatar-sm">👤</div>
+        <div><div class="user-name-sm">${u.name || '—'}</div>
+        <div class="user-email-sm">${u.uid.slice(0,12)}</div></div>
+      </div></td>
+      <td style="font-family:monospace;font-size:13px">${u.uid.slice(0,12)}</td>
+      <td>${u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-TW') : '—'}</td>
+      <td>${u.score || 0}</td>
+      <td>${u.days || 1}</td>
+      <td><span class="status-badge ${u.banned ? 'status-banned' : 'status-active'}">${u.banned ? '⛔ 封禁' : '✓ 正常'}</span></td>
+      <td><div class="table-actions">
+        <button class="tbl-btn tbl-view" onclick="openUserDrawer('${u.uid}')">詳情</button>
+        ${u.banned
+          ? `<button class="tbl-btn tbl-unban" onclick="adminUnbanUser('${u.uid}','${u.name||''}')">解封</button>`
+          : `<button class="tbl-btn tbl-ban" onclick="adminBanUser('${u.uid}','${u.name||''}')">封禁</button>`}
+        <button class="tbl-btn tbl-delete" onclick="adminDeleteUser('${u.uid}','${u.name||''}')">刪除</button>
+      </div></td>
+    </tr>`).join('');
+}
+
+window.adminBanUser = function(uid, name) {
+  showAdminConfirm({
+    icon: '⛔', title: `封禁用戶 ${name}？`,
+    desc: '封禁後，此用戶將無法登入 App，但資料保留。',
+    okText: '確認封禁', danger: true,
+    cb: async () => {
+      await update(ref(db, `users/${uid}`), { banned: true, bannedAt: Date.now() });
+      adminToast(`已封禁 ${name}`);
+      loadUsers();
+    }
+  });
+};
+
+window.adminUnbanUser = function(uid, name) {
+  showAdminConfirm({
+    icon: '✅', title: `解除封禁 ${name}？`,
+    desc: '解封後，此用戶可以重新正常使用 App。',
+    okText: '確認解封', danger: false,
+    cb: async () => {
+      await update(ref(db, `users/${uid}`), { banned: false, bannedAt: null });
+      adminToast(`已解除封禁 ${name}`);
+      loadUsers();
+    }
+  });
+};
+
+window.adminDeleteUser = function(uid, name) {
+  showAdminConfirm({
+    icon: '🗑️', title: `永久刪除 ${name}？`,
+    desc: '此操作不可逆，將永久刪除此用戶的所有資料，包括健康記錄與聊天紀錄。',
+    okText: '永久刪除', danger: true,
+    cb: async () => {
+      await set(ref(db, `users/${uid}`), null);
+      adminToast(`已刪除用戶 ${name}`);
+      loadUsers();
+    }
+  });
+};
+
+window.exportUsers = function() {
+  const rows = [['名稱','UID','積分','天數','加入時間','狀態']];
+  allUsers.forEach(u => rows.push([
+    u.name||'', u.uid.slice(0,12), u.score||0, u.days||1,
+    u.createdAt ? new Date(u.createdAt).toLocaleDateString('zh-TW') : '',
+    u.banned ? '封禁' : '正常'
+  ]));
+  const csv = rows.map(r => r.join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = 'data:text/csv;charset=utf-8,\uFEFF' + encodeURIComponent(csv);
+  a.download = `peini-users-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  adminToast('CSV 已匯出 ⬇');
+};
+
+// ── 用戶詳情側滑 ──
+window.openUserDrawer = async function(uid) {
+  drawerUid = uid;
+  document.getElementById('detail-drawer').classList.add('open');
+  document.getElementById('drawer-overlay').classList.add('show');
+  document.getElementById('drawer-name').textContent = '載入中…';
+
+  const [userSnap, bpSnap, bsSnap] = await Promise.all([
+    get(ref(db, `users/${uid}`)),
+    get(ref(db, `users/${uid}/bp`)),
+    get(ref(db, `users/${uid}/bs`)),
+  ]);
+
+  if (!userSnap.exists()) return;
+  const u = userSnap.val();
+
+  document.getElementById('drawer-avatar').textContent = '👤';
+  document.getElementById('drawer-name').textContent = u.name || '未命名';
+  document.getElementById('drawer-sub').textContent = `${u.banned ? '⛔ 已封禁 · ' : ''}積分 ${u.score || 0} · 第 ${u.days || 1} 天`;
+
+  document.getElementById('drawer-basic').innerHTML = [
+    ['UID（代號）', uid.slice(0,12)],
+    ['加入時間', u.createdAt ? new Date(u.createdAt).toLocaleString('zh-TW') : '—'],
+    ['使用天數', `${u.days || 1} 天`],
+    ['累積積分', u.score || 0],
+    ['完成任務', u.tasks || 0],
+    ['連續天數', u.streak || 0],
+    ['目前角色', ['看護','小情人','老伴','管家','貓咪'][u.companion || 0]],
+  ].map(([l, v]) => `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-value">${v}</span></div>`).join('');
+
+  let bpCount = 0, bpHigh = 0;
+  if (bpSnap.exists()) bpSnap.forEach(c => { bpCount++; if (c.val().sys > 140) bpHigh++; });
+  let bsCount = 0;
+  if (bsSnap.exists()) bsSnap.forEach(() => bsCount++);
+
+  document.getElementById('drawer-health').innerHTML = [
+    ['血壓記錄筆數', bpCount],
+    ['血壓異常次數', `${bpHigh} 次 ${bpHigh > 3 ? '⚠️' : ''}`],
+    ['血糖記錄筆數', bsCount],
+  ].map(([l, v]) => `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-value">${v}</span></div>`).join('');
+
+  const groupsSnap = await get(ref(db, `users/${uid}/groups`));
+  let gCount = 0;
+  if (groupsSnap.exists()) groupsSnap.forEach(() => gCount++);
+  document.getElementById('drawer-social').innerHTML = [
+    ['參與群組數', gCount],
+    ['帳號狀態', u.banned ? '⛔ 已封禁' : '✓ 正常'],
+  ].map(([l, v]) => `<div class="detail-row"><span class="detail-label">${l}</span><span class="detail-value">${v}</span></div>`).join('');
+
+  document.getElementById('drawer-actions').innerHTML = u.banned
+    ? `<button class="drawer-action-btn da-ok" onclick="adminUnbanUser('${uid}','${u.name||''}')">✅ 解除封禁</button>
+       <button class="drawer-action-btn da-danger" onclick="adminDeleteUser('${uid}','${u.name||''}')">🗑️ 刪除帳號</button>`
+    : `<button class="drawer-action-btn da-warn" onclick="adminBanUser('${uid}','${u.name||''}')">⛔ 封禁用戶</button>
+       <button class="drawer-action-btn da-danger" onclick="adminDeleteUser('${uid}','${u.name||''}')">🗑️ 刪除帳號</button>`;
+};
+
+window.closeDrawer = function() {
+  document.getElementById('detail-drawer').classList.remove('open');
+  document.getElementById('drawer-overlay').classList.remove('show');
+  drawerUid = null;
+};
+
+// ══════════════════════
+// 群組管理
+// ══════════════════════
+async function loadGroups() {
+  const snap = await get(ref(db, 'groups'));
+  allGroups = [];
+  if (snap.exists()) snap.forEach(child => allGroups.push({ gid: child.key, ...child.val() }));
+  allGroups.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+  renderGroups(allGroups);
+}
+
+window.filterGroups = function() {
+  const q = document.getElementById('group-search').value.toLowerCase();
+  const f = document.getElementById('group-filter').value;
+  const list = allGroups.filter(g => {
+    const match = !q || (g.name||'').toLowerCase().includes(q);
+    const typeMatch = f === 'all' || g.type === f;
+    return match && typeMatch;
+  });
+  renderGroups(list);
+};
+
+const typeLabel = { family:'🏠 家人群', friends:'👥 好友群', team:'⚔️ 戰隊', dm:'💬 私訊' };
+
+function renderGroups(groups) {
+  document.getElementById('groups-body').innerHTML = groups.length === 0
+    ? `<tr><td colspan="7"><div class="empty-state"><div class="empty-icon">🔍</div><p>找不到群組</p></div></td></tr>`
+    : groups.map(g => {
+        const memberCount = Object.keys(g.members || {}).length;
+        return `<tr>
+          <td><div class="user-cell">
+            <div style="font-size:24px">${g.icon || '👥'}</div>
+            <div><div class="user-name-sm">${g.name}</div>
+            <div class="user-email-sm">ID: ${g.gid.slice(0,8)}</div></div>
+          </div></td>
+          <td>${typeLabel[g.type] || g.type}</td>
+          <td>${memberCount} 人</td>
+          <td style="font-family:monospace;font-weight:700;color:var(--orange)">${g.inviteCode || '—'}</td>
+          <td>${g.createdAt ? new Date(g.createdAt).toLocaleDateString('zh-TW') : '—'}</td>
+          <td>${g.score || 0}</td>
+          <td><div class="table-actions">
+            <button class="tbl-btn tbl-view" onclick="viewGroupDetail('${g.gid}')">詳情</button>
+            <button class="tbl-btn tbl-ban" onclick="adminForceDissolve('${g.gid}','${g.name}')">強制解散</button>
+          </div></td>
+        </tr>`;
+      }).join('');
+}
+
+window.viewGroupDetail = async function(gid) {
+  const snap = await get(ref(db, `groups/${gid}`));
+  if (!snap.exists()) return;
+  const g = snap.val();
+  const members = Object.entries(g.members || {});
+  adminToast(`「${g.name}」共 ${members.length} 人 · 邀請碼：${g.inviteCode}`);
+};
+
+window.adminForceDissolve = function(gid, name) {
+  showAdminConfirm({
+    icon: '💥', title: `強制解散「${name}」？`,
+    desc: '此操作不可逆，將刪除群組及所有聊天記錄。',
+    okText: '強制解散', danger: true,
+    cb: async () => {
+      const g = (await get(ref(db, `groups/${gid}`))).val();
+      if (g?.members) {
+        await Promise.all(Object.keys(g.members).map(uid =>
+          set(ref(db, `users/${uid}/groups/${gid}`), null)
+        ));
+      }
+      await set(ref(db, `groups/${gid}`), null);
+      await set(ref(db, `group-messages/${gid}`), null);
+      adminToast(`已解散群組「${name}」`);
+      loadGroups();
+    }
+  });
+};
+
+// ══════════════════════
+// 系統公告
+// ══════════════════════
+const announceIcons = { info:'ℹ️', warn:'⚠️', event:'🎉', maintain:'🔧' };
+
+window.selectAnnounceType = function(btn, type) {
+  document.querySelectorAll('.announce-type').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  announceType = type;
+};
+
+window.previewAnnouncement = function() {
+  const text = document.getElementById('announce-text').value.trim();
+  if (!text) return adminToast('請輸入公告內容');
+  adminToast(`預覽：${announceIcons[announceType]} ${text.slice(0,30)}…`);
+};
+
+window.sendAnnouncement = async function() {
+  const text = document.getElementById('announce-text').value.trim();
+  if (!text) return adminToast('請輸入公告內容');
+  showAdminConfirm({
+    icon: '📢', title: '確認發送公告？',
+    desc: `將向所有用戶發送：「${text.slice(0,40)}${text.length>40?'…':''}」`,
+    okText: '立即發送', danger: false,
+    cb: async () => {
+      await push(ref(db, 'system-announcements'), {
+        text, type: announceType, icon: announceIcons[announceType],
+        sentAt: Date.now(), sentBy: adminUid
+      });
+      document.getElementById('announce-text').value = '';
+      adminToast('公告已發送 📢');
+      loadAnnounceHistory();
+    }
+  });
+};
+
+async function loadAnnounceHistory() {
+  const snap = await get(ref(db, 'system-announcements'));
+  const el = document.getElementById('announce-history');
+  if (!snap.exists()) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">📭</div><p>還沒有發送過公告</p></div>';
+    return;
+  }
+  const list = [];
+  snap.forEach(child => list.push({ id: child.key, ...child.val() }));
+  list.sort((a, b) => (b.sentAt || 0) - (a.sentAt || 0));
+  el.innerHTML = list.slice(0, 20).map(a => `
+    <div class="ah-row">
+      <div class="ah-icon">${a.icon || 'ℹ️'}</div>
+      <div class="ah-content">
+        <div class="ah-text">${a.text}</div>
+        <div class="ah-meta">${a.sentAt ? new Date(a.sentAt).toLocaleString('zh-TW') : '—'}</div>
+      </div>
+      <button class="tbl-btn tbl-ban" onclick="deleteAnnouncement('${a.id}')">刪除</button>
+    </div>`).join('');
+}
+
+window.deleteAnnouncement = async function(id) {
+  await set(ref(db, `system-announcements/${id}`), null);
+  adminToast('公告已刪除');
+  loadAnnounceHistory();
+};
+
+// ══════════════════════
+// 健康數據
+// ══════════════════════
+async function loadHealthStats() {
+  const snap = await get(ref(db, 'users'));
+  if (!snap.exists()) return;
+
+  let bpTotal = 0, bsTotal = 0, medTotal = 0;
+  const abnormalUsers = [];
+  let taskDone = 0, taskTotal = 0;
+
+  const promises = [];
+  snap.forEach(child => {
+    const uid = child.key;
+    const u = child.val();
+    promises.push((async () => {
+      const [bpSnap, bsSnap] = await Promise.all([
+        get(ref(db, `users/${uid}/bp`)),
+        get(ref(db, `users/${uid}/bs`)),
+      ]);
+      let userBpHigh = 0;
+      if (bpSnap.exists()) bpSnap.forEach(c => {
+        bpTotal++;
+        if (c.val().sys > 140) { userBpHigh++; bpHigh++; }
+      });
+      if (bsSnap.exists()) bsSnap.forEach(() => bsTotal++);
+      if (userBpHigh > 0) abnormalUsers.push({ name: u.name || '用戶', count: userBpHigh, uid });
+
+      // 任務完成率
+      const today = new Date().toDateString();
+      const taskVal = u.tasks ? u.tasks : 0;
+      taskDone += taskVal;
+      taskTotal += 4; // 每人4個任務
+    })());
+  });
+
+  let bpHigh = 0;
+  await Promise.all(promises);
+
+  document.getElementById('health-bp-count').textContent = bpTotal;
+  document.getElementById('health-bs-count').textContent = bsTotal;
+  document.getElementById('health-med-count').textContent = medTotal;
+
+  abnormalUsers.sort((a, b) => b.count - a.count);
+  document.getElementById('bp-abnormal-list').innerHTML = abnormalUsers.length === 0
+    ? '<div class="empty-state"><div class="empty-icon">✅</div><p>沒有血壓異常記錄</p></div>'
+    : abnormalUsers.slice(0, 10).map(u =>
+        `<div class="detail-row">
+          <span class="detail-label">👤 ${u.name}</span>
+          <span style="color:var(--red);font-weight:700">異常 ${u.count} 次 ⚠️</span>
+        </div>`
+      ).join('');
+
+  const rate = taskTotal > 0 ? Math.round(taskDone / taskTotal * 100) : 0;
+  document.getElementById('task-stats').innerHTML = `
+    <div class="detail-row"><span class="detail-label">任務總完成數</span><span class="detail-value">${taskDone}</span></div>
+    <div class="detail-row"><span class="detail-label">整體完成率</span><span class="detail-value" style="color:var(--green)">${rate}%</span></div>
+    <div style="background:#F0E8E0;border-radius:10px;height:12px;margin-top:12px">
+      <div style="background:linear-gradient(90deg,var(--green),var(--blue));border-radius:10px;height:100%;width:${rate}%;transition:.5s"></div>
+    </div>`;
+}
+
+// ══════════════════════
+// 檢舉審核（預留）
+// ══════════════════════
+async function loadReports() {
+  const snap = await get(ref(db, 'reports'));
+  const el = document.getElementById('reports-list');
+  const badge = document.getElementById('reports-badge');
+  if (!snap.exists()) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-icon">✅</div><p>目前沒有待審核的檢舉</p></div>';
+    badge.style.display = 'none';
+    return;
+  }
+  const reports = [];
+  snap.forEach(child => reports.push({ id: child.key, ...child.val() }));
+  badge.style.display = reports.length ? 'inline' : 'none';
+
+  el.innerHTML = reports.map(r => `
+    <div class="ah-row">
+      <div class="ah-icon">🚨</div>
+      <div class="ah-content">
+        <div class="ah-text">檢舉者：${r.fromName || '—'} → 被檢舉：${r.targetName || '—'}</div>
+        <div class="ah-meta">原因：${r.reason || '未說明'} · ${r.ts ? new Date(r.ts).toLocaleString('zh-TW') : ''}</div>
+      </div>
+      <div style="display:flex;gap:6px">
+        <button class="tbl-btn tbl-ban" onclick="handleReport('${r.id}','${r.targetUid}','${r.targetName||''}')">封禁</button>
+        <button class="tbl-btn tbl-view" onclick="dismissReport('${r.id}')">忽略</button>
+      </div>
+    </div>`).join('');
+}
+
+window.handleReport = function(rid, uid, name) {
+  adminBanUser(uid, name);
+  dismissReport(rid);
+};
+
+window.dismissReport = async function(rid) {
+  await set(ref(db, `reports/${rid}`), null);
+  adminToast('已忽略此檢舉');
+  loadReports();
+};
+
+// ══════════════════════
+// 確認框
+// ══════════════════════
+function showAdminConfirm({ icon, title, desc, okText, danger, cb }) {
+  document.getElementById('acb-icon').textContent = icon;
+  document.getElementById('acb-title').textContent = title;
+  document.getElementById('acb-desc').textContent = desc;
+  const ok = document.getElementById('acb-ok');
+  ok.textContent = okText;
+  ok.className = `acb-ok${danger ? '' : ' warn'}`;
+  adminConfirmCb = cb;
+  document.getElementById('admin-confirm').classList.add('show');
+}
+
+window.closeAdminConfirm = function() {
+  document.getElementById('admin-confirm').classList.remove('show');
+  adminConfirmCb = null;
+};
+
+window.runAdminConfirm = async function() {
+  document.getElementById('admin-confirm').classList.remove('show');
+  if (adminConfirmCb) { await adminConfirmCb(); adminConfirmCb = null; }
+};
+
+</script>
+</body>
+</html>
