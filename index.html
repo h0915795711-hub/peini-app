@@ -2134,7 +2134,7 @@ window.sendMessage = async function() {
   } catch(e) {
     typing.remove();
     console.error('Chat error:', e);
-    appendMsg('ai', '不好意思，我剛才沒聽清楚，可以再說一次嗎？😊');
+    appendMsg('ai', `⚠️ 除錯訊息：${e.message || e}`);
   }
 };
 
