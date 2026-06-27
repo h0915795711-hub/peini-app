@@ -1656,13 +1656,13 @@ import { getDatabase, ref, set, get, push, onValue, update
        } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
 
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_PROJECT.firebaseapp.com",
-  databaseURL: "https://YOUR_PROJECT-default-rtdb.firebaseio.com",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_PROJECT.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyBm2ptlkKwKgnWmoROQG_NTlBNklKWM2Zc",
+  authDomain: "peini-app.firebaseapp.com",
+  databaseURL: "https://peini-app-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "peini-app",
+  storageBucket: "peini-app.firebasestorage.app",
+  messagingSenderId: "285609288822",
+  appId: "1:285609288822:web:ab3e4b912d00f722dd6b57"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -2070,6 +2070,16 @@ function appendMsg(role, text) {
   container.scrollTop = container.scrollHeight;
 }
 
+// ─── Functions 端點設定 ───
+const CHAT_FUNCTION_URL = 'https://chatwithcompanion-h7u5rp5hbq-de.a.run.app';
+const STORY_FUNCTION_URL = 'https://generatestory-h7u5rp5hbq-de.a.run.app';
+
+// ─── 取得 ID Token 輔助函數 ───
+async function getIdToken() {
+  if (!currentUser) return null;
+  try { return await currentUser.getIdToken(); } catch { return null; }
+}
+
 window.sendMessage = async function() {
   const input = document.getElementById('chat-input');
   const text = input.value.trim();
@@ -2089,49 +2099,90 @@ window.sendMessage = async function() {
   container.scrollTop = container.scrollHeight;
 
   try {
+    const token = await getIdToken();
     const c = COMPANIONS[currentComp];
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
+
+    const res = await fetch(CHAT_FUNCTION_URL, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'anthropic-version': '2023-06-01', 'anthropic-dangerous-direct-browser-access': 'true' },
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-6',
-        max_tokens: 300,
-        system: c.persona + '\n\n請記得：說話要簡短（不超過 3 句），使用繁體中文，語氣親切溫暖，適合年長者閱讀。',
-        messages: chatHistory.slice(-10),
+        messages: chatHistory.slice(-12),
+        companionId: c.id,
       })
     });
+
     const data = await res.json();
     typing.remove();
-    const reply = data.content?.[0]?.text || '我聽到你說的了，你說得很對喔！';
+
+    if (!res.ok) throw new Error(data.error || 'API error');
+
+    const reply = data.reply || '我聽到你說的了，你說得很對喔！';
     appendMsg('ai', reply);
     chatHistory.push({ role:'assistant', content: reply });
 
-    // 儲存對話紀錄
+    // 儲存對話紀錄 + 積分
     if(currentUser) {
       push(ref(db, `users/${currentUser.uid}/chats`), {
-        comp: COMPANIONS[currentComp].id,
-        user: text, ai: reply,
-        ts: Date.now()
+        comp: c.id, user: text, ai: reply, ts: Date.now()
       });
       userData.score = (userData.score||0) + 5;
       update(ref(db, `users/${currentUser.uid}`), { score: userData.score });
     }
   } catch(e) {
     typing.remove();
+    console.error('Chat error:', e);
     appendMsg('ai', '不好意思，我剛才沒聽清楚，可以再說一次嗎？😊');
   }
 };
 
-// ─── 故事會 ───
-window.loadStory = function() {
-  storyIndex = Math.floor(Math.random() * STORIES.length);
-  const s = STORIES[storyIndex];
-  document.getElementById('story-cat').textContent = s.cat;
-  document.getElementById('story-title').textContent = s.title;
-  document.getElementById('story-text').textContent = s.text;
+// ─── 故事會（AI 生成） ───
+const STORY_CATEGORIES = ['台灣故事', '笑話', '健康知識', '歷史故事'];
+// 備用靜態故事（Functions 失敗時使用）
+const STORIES_FALLBACK = [
+  { cat:'台灣民間故事', title:'虎姑婆的傳說', text:'從前從前，山裡住著一隻愛吃小孩手指頭的虎姑婆。每到夜深人靜，她就會假扮成姑婆，敲響村裡孩子的房門……這個故事提醒大家，要聽大人的話，不要隨便開門給陌生人喔！' },
+  { cat:'台語笑話', title:'阿嬤的智慧', text:'有人問阿嬤：「長壽的秘訣是什麼？」阿嬤想了想說：「就是每天笑一笑！」「那如果笑不出來怎麼辦？」阿嬤說：「那就看看鄰居就笑出來了！」哈哈哈 😄' },
+  { cat:'健康小知識', title:'多喝水好處多', text:'水是生命之源！每天喝足 8 杯水（約 2000 毫升），可以幫助排毒、促進新陳代謝、保持皮膚水嫩。記得早上起床先喝一杯溫水，對身體最好喔！' },
+];
+
+window.loadStory = async function() {
+  // 先顯示載入中
+  document.getElementById('story-cat').textContent = '載入中…';
+  document.getElementById('story-title').textContent = '正在為您準備今日故事';
+  document.getElementById('story-text').textContent = '請稍候片刻 ✨';
   document.getElementById('play-btn').textContent = '▶ 播放語音';
   isSpeaking = false;
   if(speechObj) { speechSynthesis.cancel(); speechObj = null; }
+
+  try {
+    const token = await getIdToken();
+    if (!token) throw new Error('not logged in');
+
+    const cat = STORY_CATEGORIES[Math.floor(Math.random() * STORY_CATEGORIES.length)];
+    const res = await fetch(STORY_FUNCTION_URL, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify({ category: cat, language: 'zh-TW' })
+    });
+
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error);
+
+    document.getElementById('story-cat').textContent = data.category || cat;
+    document.getElementById('story-title').textContent = data.title;
+    document.getElementById('story-text').textContent = data.text;
+  } catch(e) {
+    // 備用靜態故事
+    const s = STORIES_FALLBACK[Math.floor(Math.random() * STORIES_FALLBACK.length)];
+    document.getElementById('story-cat').textContent = s.cat;
+    document.getElementById('story-title').textContent = s.title;
+    document.getElementById('story-text').textContent = s.text;
+  }
 };
 
 window.toggleStory = function() {
@@ -2141,8 +2192,9 @@ window.toggleStory = function() {
     isSpeaking = false;
     document.getElementById('play-btn').textContent = '▶ 播放語音';
   } else {
-    const s = STORIES[storyIndex];
-    const utter = new SpeechSynthesisUtterance(s.title + '。' + s.text);
+    const title = document.getElementById('story-title').textContent;
+    const text  = document.getElementById('story-text').textContent;
+    const utter = new SpeechSynthesisUtterance(title + '。' + text);
     utter.lang = 'zh-TW';
     utter.rate = 0.85;
     utter.pitch = 1.0;
@@ -2156,6 +2208,7 @@ window.toggleStory = function() {
 };
 
 loadStory();
+
 
 // ─── 排行榜 ───
 function renderLeaderboard() {
