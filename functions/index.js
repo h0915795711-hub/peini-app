@@ -3,31 +3,42 @@ const { setGlobalOptions } = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const Anthropic = require("@anthropic-ai/sdk");
 
+// ── 初始化 ──
 admin.initializeApp();
-setGlobalOptions({ region: "asia-east1" });
+setGlobalOptions({ region: "asia-east1" }); // 台灣最近節點
 
+// ── Anthropic 客戶端（Key 存在 Firebase 環境變數，不外露） ──
+// 設定方式：firebase functions:secrets:set ANTHROPIC_KEY
 const getAnthropicClient = () => {
   const key = process.env.ANTHROPIC_KEY;
   if (!key) throw new Error("ANTHROPIC_KEY not set");
   return new Anthropic.default({ apiKey: key });
 };
 
+/**
+ * chatWithCompanion
+ * POST /chatWithCompanion
+ * Body: { messages: [...], systemPrompt: "...", uid: "..." }
+ * 回傳: { reply: "..." }
+ */
 exports.chatWithCompanion = onRequest(
   {
     secrets: ["ANTHROPIC_KEY"],
     cors: [
-      "https://h0915795711-hub.github.io",
-      "http://localhost:5500",
+      "https://h0915795711-hub.github.io",  // ← 你的 GitHub Pages 網址
+      "http://localhost:5500",               // 本機測試
       "http://127.0.0.1:5500"
     ],
     timeoutSeconds: 30,
     memory: "256MiB",
   },
   async (req, res) => {
+    // 只接受 POST
     if (req.method !== "POST") {
       return res.status(405).json({ error: "Method not allowed" });
     }
 
+    // 驗證 Firebase Auth Token（確保是登入用戶才能呼叫）
     const authHeader = req.headers.authorization || "";
     const idToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : null;
 
@@ -40,6 +51,7 @@ exports.chatWithCompanion = onRequest(
       const decoded = await admin.auth().verifyIdToken(idToken);
       uid = decoded.uid;
 
+      // 確認用戶未被封禁
       const userSnap = await admin.database().ref(`users/${uid}`).get();
       if (userSnap.exists() && userSnap.val().banned) {
         return res.status(403).json({ error: "User is banned" });
@@ -48,17 +60,20 @@ exports.chatWithCompanion = onRequest(
       return res.status(401).json({ error: "Unauthorized: invalid token" });
     }
 
+    // 取得請求內容
     const { messages, systemPrompt, companionId } = req.body;
 
     if (!messages || !Array.isArray(messages)) {
       return res.status(400).json({ error: "Invalid messages format" });
     }
 
+    // 訊息數量限制（防止濫用）
     const cleanMessages = messages.slice(-12).map(m => ({
       role: m.role === "user" ? "user" : "assistant",
-      content: String(m.content).slice(0, 500)
+      content: String(m.content).slice(0, 500) // 每則最多 500 字
     }));
 
+    // 系統提示詞（後端管理，前端無法竄改）
     const COMPANION_PERSONAS = {
       nurse:   "你是曉雯，一位親切溫柔的看護。用關愛的語氣與長輩說話，常常叮嚀吃藥、喝水、量血壓。偶爾說說健康小知識。",
       lover:   "你是甜甜，一位甜蜜溫柔的小情人。用撒嬌可愛的語氣和長輩說話，常說「我愛你」「想你了」。",
@@ -69,7 +84,7 @@ exports.chatWithCompanion = onRequest(
 
     const persona = COMPANION_PERSONAS[companionId] || COMPANION_PERSONAS.nurse;
     const finalSystem = systemPrompt
-      ? ${persona}\n\n${systemPrompt}
+      ? `${persona}\n\n${systemPrompt}`
       : `${persona}\n\n請記得：說話要簡短（不超過3句），使用繁體中文，語氣親切溫暖，適合年長者閱讀。`;
 
     try {
@@ -83,6 +98,7 @@ exports.chatWithCompanion = onRequest(
 
       const reply = response.content?.[0]?.text || "我聽到你說的了，你說得很對喔！";
 
+      // 記錄用量（選用，用於統計）
       await admin.database().ref(`usage/${uid}/chat`).transaction(val => (val || 0) + 1);
 
       return res.status(200).json({ reply });
@@ -93,6 +109,12 @@ exports.chatWithCompanion = onRequest(
   }
 );
 
+/**
+ * generateStory
+ * POST /generateStory
+ * Body: { category: "台灣故事|笑話|健康知識", language: "zh-TW|tai" }
+ * 回傳: { title: "...", text: "...", category: "..." }
+ */
 exports.generateStory = onRequest(
   {
     secrets: ["ANTHROPIC_KEY"],
@@ -109,6 +131,7 @@ exports.generateStory = onRequest(
       return res.status(405).json({ error: "Method not allowed" });
     }
 
+    // Auth 驗證
     const idToken = (req.headers.authorization || "").replace("Bearer ", "");
     if (!idToken) return res.status(401).json({ error: "Unauthorized" });
     try {
@@ -151,6 +174,7 @@ exports.generateStory = onRequest(
       });
     } catch (e) {
       console.error("Story generation error:", e.message);
+      // 備用靜態故事
       return res.status(200).json({
         title: "台灣的美麗傳說",
         text: "很久很久以前，台灣這片土地上住著勤勞善良的人們，他們互相幫助、共同生活，留下了許多美好的故事與回憶…",
