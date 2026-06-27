@@ -25,7 +25,7 @@ jobs:
 
       - name: Set Anthropic Key as Firebase Secret
         run: |
-          echo "${{ github.event.inputs.anthropic_key }}" | \
+          printf '%s' "${{ github.event.inputs.anthropic_key }}" | \
           firebase functions:secrets:set ANTHROPIC_KEY \
           --project peini-app \
           --non-interactive

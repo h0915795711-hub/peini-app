@@ -12,7 +12,7 @@ setGlobalOptions({ region: "asia-east1" }); // 台灣最近節點
 const getAnthropicClient = () => {
   const key = process.env.ANTHROPIC_KEY;
   if (!key) throw new Error("ANTHROPIC_KEY not set");
-  return new Anthropic.default({ apiKey: key });
+  return new Anthropic({ apiKey: key });
 };
 
 /**
@@ -104,7 +104,7 @@ exports.chatWithCompanion = onRequest(
       return res.status(200).json({ reply });
     } catch (e) {
       console.error("Anthropic API error:", e.message);
-      return res.status(500).json({ error: "AI 服務暫時無法使用，請稍後再試" });
+      return res.status(500).json({ error: `除錯：${e.message}` });
     }
   }
 );
